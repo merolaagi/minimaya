@@ -4,17 +4,19 @@ A small Maya-style 3D layout and animation studio that runs in the browser, serv
 
 ## Making a movie
 
-1. **Characters tab**: add a human, cat, dog, bear, bunny, fox, pig or panda. The Attribute Editor changes species, skin or fur, hair, clothes and size.
+1. **Characters tab**: add a human, cat, dog, bear, bunny, fox, pig, panda, tiger, lion or raccoon. The Attribute Editor changes species, skin or fur color, fur length, hair, clothes, size, and the character's voice, pitch and speed.
 2. **Set tab**: dress the scene with props, and open Environment for sky, ground and sun (Day, Golden hour, Night).
 3. **Acting tab**: select a character, click an action. It lands at the current frame and the playhead jumps to its end, so the next click follows on. Walk to and Run to ask you to click the ground for the destination.
-4. **Story panel (T)**: every clip on one timeline. Drag to move, drag the right edge to resize, click a clip to set its facial expression, dialogue line (subtitle), talking mouth and facing direction. Delete removes it.
+4. **Story panel (T)**: every clip on one timeline. Drag to move, drag the right edge to resize, click a clip to set its facial expression, dialogue line, talking mouth and facing direction. Typing a Line on a Talk clip speaks it in the character's voice (on the local studio) and the mouth follows the sound; the line also shows as a subtitle. Voice all lines re-speaks anything that changed. Delete removes a clip.
 5. **Camera tab**: Camera from view places a camera where you are looking; Add shot cuts to the selected camera at the current frame. Film view (V) shows the movie through the shots, framed to the output format.
 6. **Media tab**: add a music or voice track, or import a rigged GLB character (for example from Mixamo) and play its animations with Play animation, Walk to and Run to.
 7. **Render**: pick Landscape 1920×1080, Vertical 1080×1920 (Reels, TikTok, Shorts) or Square, then Render movie (MP4). Frames render one by one, ffmpeg on the Mac encodes H.264 with AAC audio, and the file lands in `data/renders`.
 
 File, Open demo movie loads a 9-second example with three characters and two cameras.
 
-Limits: characters are toy-style rigid-part rigs (no soft skin deformation); there is no text-to-speech, so dialogue is subtitles plus any audio you add; GLB export carries keyframe animation but not story acting; WebM playblasts have no sound (the MP4 path does).
+Voices: the installer puts Piper (offline neural text-to-speech) in `.venv` and downloads the voices named in `voices.txt` into `data/voices`; lines can be full Piper voice names or language codes such as `ne_NP`. On a Mac the system voices appear too. Generated lines are cached in `data/assets`.
+
+Limits: characters are stylized rigs with rigid limbs (no soft skin deformation); Piper's Hindi and Nepali voices are natural but not studio-actor quality; fur is heavy for weak GPUs (use Display, Fur: light); GLB export carries keyframe animation but not story acting; WebM playblasts have no sound (the MP4 path does).
 
 ## Install or update
 
@@ -36,6 +38,7 @@ Your scenes, media and movies in `~/Sites/minimaya/data` are never touched by an
 | GitHub push | on when gh is logged in | `MINIMAYA_NO_PUSH=1` |
 | Open browser | on | `MINIMAYA_NO_OPEN=1` |
 | ffmpeg via Homebrew | on when missing | `MINIMAYA_NO_FFMPEG=1` |
+| Offline voices (Piper) | on | `MINIMAYA_NO_TTS=1` |
 
 ## Everyday control
 
@@ -67,6 +70,8 @@ The server binds to localhost, which is what cloudflared needs. Add an ingress r
 | POST | /api/render/<job>/finish | encode the frames (and audio) to MP4 with ffmpeg |
 | DELETE | /api/render/<job> | discard a cancelled render |
 | GET | /api/renders | list finished movies |
+| GET | /api/tts/voices | voices from Piper, macOS and espeak-ng |
+| POST | /api/tts | speak {text, voice, pitch, rate} into a cached WAV asset |
 | GET | /media/assets/<file>, /media/renders/<file> | media, with byte ranges for video seeking |
 
 ## Files

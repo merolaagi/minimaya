@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.0
+- Voices: type a Line on a Talk clip and the studio speaks it. Offline Piper neural voices (English, Hindi, Nepali by default, edit voices.txt for more), Mac system voices, and espeak-ng when present
+- Lip sync from the actual audio: mouth opening follows loudness, shape widens on hissing sounds, head nods with emphasis
+- Per-character voice, pitch (animals default higher or lower) and speed; Speak line, Re-voice and Voice all lines on the Story panel; a voiced line pushes later clips back so nothing is cut off
+- MP4 mixes every voiced line with the music track
+- Characters: sculpted species heads (snouts, cheeks, chins), fur rendered as layered strands with darker roots, markings painted into the fur (fox muzzle, tiger stripes, panda patches, raccoon mask, tabby, dog eye patch), iris colors and slit pupils, lighter inner ears, black ear tips, bushy and ringed tails, lion mane
+- New species: tiger, lion, raccoon. New hair style: curly. Hair has soft fluff
+- Fur slider per character (0 gives the old toy look); Display menu sets viewport fur to full, light or hidden, renders always use full fur
+- Installer creates a Python venv with piper-tts and downloads voices into data/voices (MINIMAYA_NO_TTS=1 skips)
+
 ## 0.3.0
 - Characters: little humans and animals (cat, dog, bear, bunny, fox, pig, panda) with rigs, blinking eyes, brows, talking mouths, ears, tails, hair styles, skin-tone presets and clothes
 - Acting: 15 actions (Walk to and Run to with a ground pick, Wave, Talk, Jump, Dance, Cheer, Point, Think, Look around, Sit, Sad, Surprised, Angry, Play animation) with blending, expressions, dialogue lines and facing direction

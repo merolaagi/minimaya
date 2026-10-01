@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Mini Maya Studio server: serves the app, stores scenes and media, and encodes movies with ffmpeg. Standard library only."""
 import argparse
+import hashlib
 import json
 import mimetypes
 import os
@@ -9,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import time
+import wave
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -20,6 +22,9 @@ DATA = Path(os.environ.get("MINIMAYA_DATA", ROOT / "data"))
 SCENES = DATA / "scenes"
 ASSETS = DATA / "assets"
 RENDERS = DATA / "renders"
+VOICES = DATA / "voices"
+TMP = DATA / "tmp"
+VENV_PY = Path(os.environ.get("MINIMAYA_PIPER_PY", ROOT / ".venv" / "bin" / "python"))
 NAME_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 ASSET_RE = re.compile(r"^[A-Za-z0-9_.-]{1,96}$")
 JOB_RE = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
@@ -36,6 +41,127 @@ def find_ffmpeg():
         if c and os.path.isfile(c) and os.access(c, os.X_OK):
             return c
     return None
+
+
+_voice_cache = {"t": 0, "list": []}
+
+
+def piper_voices():
+    if not VENV_PY.exists():
+        return []
+    out = []
+    for onnx in sorted(VOICES.glob("*.onnx")):
+        meta = {}
+        try:
+            meta = json.loads(Path(str(onnx) + ".json").read_text())
+        except Exception:
+            pass
+        lang = (meta.get("language") or {}).get("code") or onnx.stem.split("-")[0]
+        lname = (meta.get("language") or {}).get("name_english") or lang
+        parts = onnx.stem.split("-")
+        base = parts[1].replace("_", " ").title() if len(parts) > 2 else onnx.stem
+        speakers = meta.get("speaker_id_map") or {}
+        if meta.get("num_speakers", 1) > 1 and speakers:
+            for name, sid in list(speakers.items())[:8]:
+                out.append({"id": "piper:%s#%d" % (onnx.stem, sid), "name": "%s %s" % (base, name), "lang": lang, "langName": lname, "engine": "piper"})
+        else:
+            out.append({"id": "piper:" + onnx.stem, "name": base, "lang": lang, "langName": lname, "engine": "piper"})
+    return out
+
+
+def say_voices():
+    if sys.platform != "darwin" or not shutil.which("say"):
+        return []
+    try:
+        r = subprocess.run(["say", "-v", "?"], capture_output=True, text=True, timeout=20)
+    except Exception:
+        return []
+    out = []
+    for line in r.stdout.splitlines():
+        m = re.match(r"^(.+?)\s+([a-z]{2,3}[_-][A-Za-z0-9]+)\s+#", line)
+        if m:
+            out.append({"id": "say:" + m.group(1).strip(), "name": m.group(1).strip(), "lang": m.group(2), "engine": "mac"})
+    return out
+
+
+def espeak_exe():
+    return shutil.which("espeak-ng") or shutil.which("espeak") or next((p for p in ("/opt/homebrew/bin/espeak-ng", "/usr/local/bin/espeak-ng") if os.path.exists(p)), None)
+
+
+def espeak_voices():
+    exe = espeak_exe()
+    if not exe:
+        return []
+    try:
+        r = subprocess.run([exe, "--voices"], capture_output=True, text=True, timeout=20)
+    except Exception:
+        return []
+    out = []
+    for line in r.stdout.splitlines()[1:]:
+        f = line.split()
+        if len(f) >= 4:
+            out.append({"id": "espeak:" + f[1], "name": f[3].replace("_", " "), "lang": f[1], "engine": "espeak"})
+    return out
+
+
+def all_voices():
+    if time.time() - _voice_cache["t"] > 30:
+        _voice_cache["list"] = piper_voices() + say_voices() + espeak_voices()
+        _voice_cache["t"] = time.time()
+    return _voice_cache["list"]
+
+
+def synth(voice, text, pitch, rate, dest):
+    ff = find_ffmpeg()
+    TMP.mkdir(parents=True, exist_ok=True)
+    stem = TMP / hashlib.sha1((voice + text + str(time.time())).encode()).hexdigest()[:16]
+    txt = stem.with_suffix(".txt")
+    txt.write_text(text, encoding="utf-8")
+    try:
+        engine, _, name = voice.partition(":")
+        if engine == "piper":
+            model, _, sid = name.partition("#")
+            onnx = VOICES / (model + ".onnx")
+            if not onnx.exists() or not VENV_PY.exists():
+                raise RuntimeError("That Piper voice is not installed")
+            raw = stem.with_suffix(".wav")
+            r = subprocess.run([str(VENV_PY), str(ROOT / "tts_piper.py"), str(onnx), str(raw), "%.3f" % (1.0 / rate), sid or ""],
+                               input=text, capture_output=True, text=True, timeout=180)
+        elif engine == "say":
+            raw = stem.with_suffix(".aiff")
+            r = subprocess.run(["say", "-v", name, "-r", str(int(180 * rate)), "-o", str(raw), "-f", str(txt)], capture_output=True, text=True, timeout=180)
+        elif engine == "espeak":
+            exe = espeak_exe()
+            if not exe:
+                raise RuntimeError("espeak-ng is not installed")
+            raw = stem.with_suffix(".wav")
+            r = subprocess.run([exe, "-v", name, "-s", str(int(160 * rate)), "-w", str(raw), "-f", str(txt)], capture_output=True, text=True, timeout=180)
+        else:
+            raise RuntimeError("Unknown voice")
+        if r.returncode != 0 or not raw.exists():
+            raise RuntimeError("Speech engine failed: " + (r.stderr or "").strip()[-300:])
+        if ff:
+            af = ["aresample=44100"]
+            if pitch:
+                k = 2 ** (pitch / 12.0)
+                af += ["asetrate=%d" % round(44100 * k), "aresample=44100", "atempo=%.5f" % (1 / k)]
+            af += ["silenceremove=start_periods=1:start_threshold=-50dB", "loudnorm=I=-16:TP=-1.5:LRA=11", "aresample=44100", "apad=pad_dur=0.12"]
+            r2 = subprocess.run([ff, "-y", "-hide_banner", "-loglevel", "error", "-i", str(raw), "-af", ",".join(af), "-ac", "1", "-c:a", "pcm_s16le", str(dest)],
+                                capture_output=True, text=True, timeout=120)
+            if r2.returncode != 0:
+                raise RuntimeError("ffmpeg could not process the voice: " + r2.stderr.strip()[-300:])
+        elif raw.suffix == ".wav":
+            shutil.copy(raw, dest)
+        else:
+            raise RuntimeError("ffmpeg is needed to convert this voice")
+    finally:
+        for f in TMP.glob(stem.name + ".*"):
+            f.unlink(missing_ok=True)
+
+
+def wav_duration(p):
+    with wave.open(str(p), "rb") as w:
+        return w.getnframes() / float(w.getframerate())
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -161,7 +287,9 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json(HTTPStatus.NOT_FOUND, {"error": "Not found"})
             return super().do_GET()
         if parts == ["health"]:
-            return self.send_json(HTTPStatus.OK, {"ok": True, "app": "minimaya", "version": VERSION, "ffmpeg": bool(find_ffmpeg())})
+            return self.send_json(HTTPStatus.OK, {"ok": True, "app": "minimaya", "version": VERSION, "ffmpeg": bool(find_ffmpeg()), "tts": bool(all_voices())})
+        if parts == ["tts", "voices"]:
+            return self.send_json(HTTPStatus.OK, {"voices": all_voices()})
         if parts == ["scenes"]:
             items = []
             for f in SCENES.glob("*.json"):
@@ -225,6 +353,8 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         parts, _ = self.route()
+        if parts == ["tts"]:
+            return self.tts()
         if not parts or len(parts) != 3 or parts[0] != "render" or parts[2] != "finish" or not JOB_RE.match(parts[1]):
             return self.send_json(HTTPStatus.NOT_FOUND, {"error": "Unknown endpoint"})
         ff = find_ffmpeg()
@@ -244,21 +374,32 @@ class Handler(SimpleHTTPRequestHandler):
         name = re.sub(r"[^A-Za-z0-9_-]+", "_", str(opts.get("name") or parts[1]))[:90] or parts[1]
         out = RENDERS / (name + ".mp4")
         cmd = [ff, "-y", "-hide_banner", "-loglevel", "error", "-framerate", str(fps), "-i", str(frames / "%05d.png")]
-        audio = opts.get("audio")
-        ap = self.asset_path(audio) if isinstance(audio, str) else None
         dur = n / fps
-        if ap and ap.exists():
-            start = float(opts.get("audioStart") or 0)
-            vol = max(0.0, min(2.0, float(opts.get("volume") if opts.get("volume") is not None else 1)))
-            if start < 0:
-                cmd += ["-ss", "%.3f" % (-start)]
+        tracks = opts.get("tracks")
+        if not isinstance(tracks, list):
+            tracks = [{"asset": opts.get("audio"), "start": opts.get("audioStart") or 0, "vol": opts.get("volume")}] if opts.get("audio") else []
+        chains, k = [], 0
+        for tr in tracks[:64]:
+            ap = self.asset_path(tr.get("asset")) if isinstance(tr, dict) and isinstance(tr.get("asset"), str) else None
+            if not ap or not ap.exists():
+                continue
+            st = float(tr.get("start") or 0)
+            if st >= dur:
+                continue
+            vol = max(0.0, min(2.0, float(tr.get("vol") if tr.get("vol") is not None else 1)))
             cmd += ["-i", str(ap)]
-            af = []
-            if start > 0:
-                ms = int(round(start * 1000))
-                af.append("adelay=%d|%d" % (ms, ms))
-            af += ["volume=%.3f" % vol, "apad"]
-            cmd += ["-map", "0:v:0", "-map", "1:a:0", "-af", ",".join(af), "-c:a", "aac", "-b:a", "192k"]
+            k += 1
+            f = ["aformat=sample_rates=48000:channel_layouts=stereo"]
+            if st < 0:
+                f.append("atrim=start=%.3f,asetpts=PTS-STARTPTS" % (-st))
+            elif st > 0:
+                f.append("adelay=delays=%d:all=1" % int(round(st * 1000)))
+            f.append("volume=%.3f" % vol)
+            chains.append("[%d:a]%s[a%d]" % (k, ",".join(f), k))
+        if chains:
+            mix = "".join("[a%d]" % i for i in range(1, k + 1))
+            fc = ";".join(chains) + ";" + mix + ("amix=inputs=%d:duration=longest:dropout_transition=0:normalize=0," % k if k > 1 else "anull,") + "alimiter=limit=0.95,apad[aout]"
+            cmd += ["-filter_complex", fc, "-map", "0:v:0", "-map", "[aout]", "-c:a", "aac", "-b:a", "192k"]
         cmd += ["-t", "%.3f" % dur, "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264", "-preset", "medium", "-crf", "17",
                 "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)]
         t0 = time.time()
@@ -271,6 +412,36 @@ class Handler(SimpleHTTPRequestHandler):
         shutil.rmtree(jobdir, ignore_errors=True)
         print("%s rendered %s (%d frames, %.1fs encode)" % (time.strftime("%Y-%m-%d %H:%M:%S"), out.name, n, time.time() - t0), flush=True)
         return self.send_json(HTTPStatus.OK, {"ok": True, "name": name, "url": "media/renders/" + out.name, "size": out.stat().st_size, "path": str(out), "frames": n})
+
+    def tts(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            opts = json.loads(self.rfile.read(length)) if 0 < length < 65536 else {}
+        except Exception:
+            opts = {}
+        text = str(opts.get("text") or "").strip()[:800]
+        voice = str(opts.get("voice") or "")
+        if not text or not voice:
+            return self.send_json(HTTPStatus.BAD_REQUEST, {"error": "Need a line of text and a voice"})
+        if voice not in {v["id"] for v in all_voices()}:
+            return self.send_json(HTTPStatus.BAD_REQUEST, {"error": "That voice is not available on this studio"})
+        try:
+            pitch = max(-12.0, min(12.0, float(opts.get("pitch") or 0)))
+            rate = max(0.5, min(2.0, float(opts.get("rate") or 1)))
+        except (TypeError, ValueError):
+            pitch, rate = 0.0, 1.0
+        key = hashlib.sha1(json.dumps([voice, text, pitch, rate]).encode("utf-8")).hexdigest()[:14]
+        dest = ASSETS / ("tts_%s.wav" % key)
+        if not dest.exists():
+            ASSETS.mkdir(parents=True, exist_ok=True)
+            tmp = dest.with_name(dest.name + ".part.wav")
+            try:
+                synth(voice, text, pitch, rate, tmp)
+                os.replace(tmp, dest)
+            except Exception as e:
+                tmp.unlink(missing_ok=True)
+                return self.send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(e)})
+        return self.send_json(HTTPStatus.OK, {"ok": True, "asset": dest.name, "duration": round(wav_duration(dest), 3), "url": "media/assets/" + dest.name})
 
     def do_DELETE(self):
         parts, _ = self.route()
@@ -291,13 +462,13 @@ def main():
     ap.add_argument("--host", default=os.environ.get("MINIMAYA_HOST", "127.0.0.1"))
     ap.add_argument("--port", type=int, default=int(os.environ.get("MINIMAYA_PORT", "48713")))
     a = ap.parse_args()
-    for d in (SCENES, ASSETS, RENDERS):
+    for d in (SCENES, ASSETS, RENDERS, VOICES, TMP):
         d.mkdir(parents=True, exist_ok=True)
     for stale in RENDERS.glob("job_*"):
         if stale.is_dir() and time.time() - stale.stat().st_mtime > 86400:
             shutil.rmtree(stale, ignore_errors=True)
     httpd = ThreadingHTTPServer((a.host, a.port), Handler)
-    print("Mini Maya Studio %s on http://%s:%d  (data: %s, ffmpeg: %s)" % (VERSION, a.host, a.port, DATA, find_ffmpeg() or "not found"), flush=True)
+    print("Mini Maya Studio %s on http://%s:%d  (data: %s, ffmpeg: %s, voices: %d)" % (VERSION, a.host, a.port, DATA, find_ffmpeg() or "not found", len(all_voices())), flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

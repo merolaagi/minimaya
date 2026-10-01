@@ -38,17 +38,32 @@ say "Installing Mini Maya Studio $VERSION (build $BUILD) into $DEST"
 mkdir -p "$DEST/data/scenes" "$DEST/data/assets" "$DEST/data/renders" "$DEST/logs" "$DEST/releases"
 if [ -f "$DEST/VERSION" ] && [ -f "$DEST/index.html" ]; then
   OLD="$(cat "$DEST/VERSION")-$(cat "$DEST/BUILD" 2>/dev/null || echo old)"
-  tar -czf "$DEST/releases/backup-$OLD.tgz" -C "$DEST" --exclude ./data --exclude ./logs --exclude ./releases --exclude ./.git . 2>/dev/null || true
+  tar -czf "$DEST/releases/backup-$OLD.tgz" -C "$DEST" --exclude ./data --exclude ./logs --exclude ./releases --exclude ./.git --exclude ./.venv . 2>/dev/null || true
   ls -1t "$DEST"/releases/backup-*.tgz 2>/dev/null | tail -n +6 | xargs rm -f 2>/dev/null || true
   ok "Backed up previous build $OLD to releases/"
 fi
 if command -v rsync >/dev/null 2>&1; then
-  rsync -a --delete --exclude=/data --exclude=/logs --exclude=/releases --exclude=/.git "$SRC/" "$DEST/"
+  rsync -a --delete --exclude=/data --exclude=/logs --exclude=/releases --exclude=/.git --exclude=/.venv "$SRC/" "$DEST/"
 else
   (cd "$SRC" && tar -cf - .) | (cd "$DEST" && tar -xf -)
 fi
 chmod +x "$DEST"/*.sh "$DEST/server.py"
 ok "Files copied (your saved scenes in data/ were left untouched)"
+
+if [ "${MINIMAYA_NO_TTS:-0}" != "1" ]; then
+  say "Setting up offline voices (Piper text-to-speech; MINIMAYA_NO_TTS=1 skips)"
+  VPY="$DEST/.venv/bin/python"
+  [ -x "$VPY" ] || "$PY" -m venv "$DEST/.venv" >/dev/null 2>&1 || true
+  if [ -x "$VPY" ]; then
+    if ! "$VPY" -c 'import piper' >/dev/null 2>&1; then
+      "$VPY" -m pip install -q --upgrade pip >/dev/null 2>&1 || true
+      "$VPY" -m pip install -q piper-tts >/dev/null 2>&1 && ok "Installed piper-tts" || say "pip could not install piper-tts; Mac system voices will still work"
+    fi
+    "$PY" "$DEST/get_voices.py" "$DEST/data/voices" || true
+  else
+    say "Could not create a Python venv; Mac system voices will still work"
+  fi
+fi
 
 if [ "$(uname)" = "Darwin" ]; then
   launchctl bootout "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true

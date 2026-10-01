@@ -277,6 +277,10 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
     <details class="menu"><summary>Display</summary><div class="dd">
       <button data-cmd="shaded">Shaded <kbd>5</kbd></button>
       <button data-cmd="wire">Wireframe <kbd>4</kbd></button>
+      <hr>
+      <button data-cmd="furView" data-arg="full">Fur: full</button>
+      <button data-cmd="furView" data-arg="light">Fur: light (faster viewport)</button>
+      <button data-cmd="furView" data-arg="off">Fur: hidden in viewport</button>
       <button data-cmd="grid">Toggle grid</button>
       <hr>
       <button data-cmd="frameSel">Frame selected <kbd>F</kbd></button>
@@ -365,6 +369,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
           <button class="b" id="cePick">Pick destination</button>
           <label id="ceClipW">Clip <select id="ceClip"></select></label>
           <label id="ceLoopW"><input type="checkbox" id="ceLoop"> Loop</label>
+          <button class="b" id="ceSpeak" hidden>Speak line</button>
+          <button class="b" id="ceSpeakAll" hidden>Voice all lines</button>
           <button class="b" id="ceDel">Delete clip</button>
         </span>
       </div>
@@ -408,6 +414,12 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
           <label class="f"><span>Clothes</span><select id="cStyle"></select></label>
           <label class="f"><span>Shoes</span><input type="color" id="cShoes"></label>
           <div class="f"><span>Size</span><div class="rng"><input type="range" id="cSize" min=".6" max="1.4" step=".01"><output id="oSize"></output></div></div>
+          <div class="f" id="cFurLenW"><span id="cFurLenL">Fur</span><div class="rng"><input type="range" id="cFurLen" min="0" max="2" step=".1"><output id="oFurLen"></output></div></div>
+          <h4 style="margin-top:12px">Voice</h4>
+          <label class="f vf"><span>Voice</span><select id="cVoice"><option value="">Automatic</option></select></label>
+          <div class="f vf"><span>Pitch</span><div class="rng"><input type="range" id="cPitch" min="-8" max="10" step="1"><output id="oPitch"></output></div></div>
+          <div class="f vf"><span>Speed</span><div class="rng"><input type="range" id="cRate" min=".7" max="1.4" step=".05"><output id="oRate"></output></div></div>
+          <div class="hint" id="cVoiceHint">Type a Line on a Talk clip and it is spoken in this voice, with the mouth following the sound.</div>
           <div class="hint">Give them actions on the Acting tab. Their clips appear on the Story panel (T).</div>
         </div>
         <div class="ae-sec" id="camSec">
@@ -469,8 +481,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <script>
 (function(){
 'use strict';
-const APP_VERSION = '0.3.0';
-const BUILD_ID = '20261001-191234-8410';
+const APP_VERSION = '0.4.0';
+const BUILD_ID = '20261001-220437-6024';
 const $ = s => document.querySelector(s);
 const DEG = Math.PI/180;
 
@@ -496,6 +508,9 @@ const ICONS = {
   fox:'<path d="M5 6l3 4h8l3-4 0 7-7 8-7-8z"/><path d="M9.5 13h.01M14.5 13h.01"/>',
   pig:'<circle cx="12" cy="13" r="7"/><ellipse cx="12" cy="15" rx="3" ry="2"/><path d="M6 8L5 4l4 2M18 8l1-4-4 2"/>',
   panda:'<circle cx="12" cy="13" r="7"/><circle cx="6.5" cy="7" r="2.3"/><circle cx="17.5" cy="7" r="2.3"/><ellipse cx="9.3" cy="12.5" rx="1.6" ry="2"/><ellipse cx="14.7" cy="12.5" rx="1.6" ry="2"/>',
+  tiger:'<circle cx="12" cy="13" r="7"/><circle cx="6.5" cy="7.5" r="2"/><circle cx="17.5" cy="7.5" r="2"/><path d="M12 6.5v3M9 7l1 2.5M15 7l-1 2.5M5.5 13h2.5M16 13h2.5"/>',
+  lion:'<circle cx="12" cy="12.5" r="5.5"/><path d="M12 2.5l2 2.5 3-1 .5 3 3 1-1.5 2.8 1.5 2.7-3 1-.5 3-3-1-2 2.5-2-2.5-3 1-.5-3-3-1L4 12.5 2.5 9.8l3-1 .5-3 3 1z"/>',
+  raccoon:'<circle cx="12" cy="13" r="7"/><path d="M6.5 9L6 4l4 3M17.5 9l.5-5-4 3M5.5 12.5c2-1.5 4.5-1.5 6.5 0 2-1.5 4.5-1.5 6.5 0"/>',
   prop:'<circle cx="12" cy="9" r="5"/><path d="M12 14v7"/>',
   camera:'<rect x="3" y="7" width="13" height="10" rx="1.5"/><path d="M16 11l5-3v8l-5-3"/>',
   model:'<circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M7 11l5-2 5 2M9 21l3-6 3 6"/>',
@@ -762,7 +777,7 @@ function clearOverlays(){
 function addOverlay(o, mat){
   if(['character','prop','camera','model'].includes(o.type)){
     o.mesh.traverse(n => {
-      if(!n.isMesh || n.isSkinnedMesh || n.userData.helper || ownerOf(n) !== o) return;
+      if(!n.isMesh || n.isSkinnedMesh || n.userData.helper || n.userData.shell || ownerOf(n) !== o) return;
       const ov = new THREE.Mesh(n.geometry, mat); ov.scale.setScalar(1.004); ov.raycast = () => {}; ov.userData.helper = true;
       n.add(ov); overlays.push(ov);
     });
@@ -965,7 +980,7 @@ orbit.addEventListener('start', () => {
 });
 function setWire(on){
   wire = on;
-  objects.forEach(o => o.mesh.traverse(n => { if(n.isMesh && n.material && n.material.isMeshStandardMaterial && !n.userData.helper) n.material.wireframe = on; }));
+  objects.forEach(o => o.mesh.traverse(n => { if(n.isMesh && n.material && n.material.isMeshStandardMaterial && !n.userData.helper && !n.userData.shell) n.material.wireframe = on; }));
   document.querySelectorAll('#shadeSeg button').forEach(b=>b.classList.toggle('on', (b.dataset.cmd==='wire')===on));
 }
 
@@ -1161,6 +1176,12 @@ function fillTypeSections(o){
     $('#cHairW').hidden = $('#cHairCW').hidden = !human; $('#cHair').value = c.hair; $('#cHairC').value = c.hairColor;
     $('#cTop').value = c.top; $('#cBot').value = c.bottom; $('#cStyle').value = c.style; $('#cShoes').value = c.shoes;
     $('#cSize').value = c.size; $('#oSize').textContent = (+c.size).toFixed(2);
+    const sp = SPECIES[c.species] || {}; $('#cFurLenW').hidden = !human && !sp.furLen; $('#cFurLenL').textContent = human ? 'Hair fluff' : 'Fur';
+    $('#cFurLen').value = c.furLen ?? 1; $('#oFurLen').textContent = (+(c.furLen ?? 1)).toFixed(1);
+    const tts = !!(server && server.tts && ttsVoices.length);
+    document.querySelectorAll('.vf').forEach(e => e.hidden = !tts);
+    $('#cVoiceHint').textContent = tts ? 'Type a Line on a Talk clip and it is spoken in this voice; the mouth follows the sound.' : server ? 'No voices installed yet. Re-run the installer to download the offline voices.' : 'Voices run in the local studio on your Mac (offline Piper voices).';
+    if(tts){ $('#cVoice').value = c.voice && ttsVoices.some(v => v.id === c.voice) ? c.voice : ''; $('#cPitch').value = c.pitch ?? 0; $('#oPitch').textContent = (c.pitch > 0 ? '+' : '') + (c.pitch ?? 0); $('#cRate').value = c.rate ?? 1; $('#oRate').textContent = (+(c.rate ?? 1)).toFixed(2) + '×'; }
   }
   if(o.type === 'camera'){
     $('#kFov').value = o.cam.fov; $('#oFov').textContent = o.cam.fov + '°';
@@ -1189,6 +1210,13 @@ const charField = (id, key, num) => {
 charField('#cFur','fur'); charField('#cMuz','muzzle'); charField('#cHair','hair'); charField('#cHairC','hairColor'); charField('#cTop','top');
 charField('#cBot','bottom'); charField('#cStyle','style'); charField('#cShoes','shoes'); charField('#cSize','size', true);
 $('#cSize').addEventListener('input', e => { $('#oSize').textContent = (+e.target.value).toFixed(2); });
+charField('#cFurLen', 'furLen', true);
+$('#cFurLen').addEventListener('input', e => { $('#oFurLen').textContent = (+e.target.value).toFixed(1); });
+const voiceField = (id, key, num, out, fmt) => {
+  $(id).addEventListener('input', e => { const o = primary(); if(!o || !o.char) return; o.char[key] = num ? +e.target.value : e.target.value; if(out) $(out).textContent = fmt(o.char[key]); });
+  $(id).addEventListener('change', () => { commit(); drawStory(); refreshClipEditor(); });
+};
+voiceField('#cVoice', 'voice'); voiceField('#cPitch', 'pitch', true, '#oPitch', v => (v > 0 ? '+' : '') + v); voiceField('#cRate', 'rate', true, '#oRate', v => v.toFixed(2) + '×');
 $('#cSpecies').addEventListener('change', e => charEdit(c => { const sp = SPECIES[e.target.value]; c.species = e.target.value; c.fur = sp.fur; c.muzzle = sp.muzzle || sp.fur; c.hair = c.species === 'human' ? (c.hair === 'none' ? 'short' : c.hair) : 'none'; }, true));
 $('#cTones').addEventListener('click', e => { const t = e.target.closest('[data-tone]'); if(t) charEdit(c => { c.fur = t.dataset.tone; }, true); });
 $('#kFov').addEventListener('input', e => { const o = primary(); if(o && o.cam){ o.cam.fov = +e.target.value; $('#oFov').textContent = o.cam.fov + '°'; } });
@@ -1497,7 +1525,7 @@ function exportRoot(){
   const root = new THREE.Group(); root.name = 'MiniMayaScene';
   objects.filter(o => o.parent == null).forEach(o => {
     const c = o.mesh.clone(true);
-    const strip = []; c.traverse(n => { if(n.userData.helper || n.userData.viewOnly) strip.push(n); });
+    const strip = []; c.traverse(n => { if(n.userData.helper || n.userData.viewOnly || n.userData.shell) strip.push(n); });
     strip.forEach(n => n.parent && n.parent.remove(n));
     root.add(c);
   });
@@ -1583,16 +1611,30 @@ function applyEnv(){
 
 /* ----- characters ----- */
 const SPECIES = {
-  human:{label:'Human', fur:'#d29a6e', ears:'human', tail:null},
-  cat:  {label:'Cat',   fur:'#e8a15a', muzzle:'#fbeee0', ears:'cat',   nose:'#e48a9a', tail:'cat', whiskers:true},
-  dog:  {label:'Dog',   fur:'#b98457', muzzle:'#f2e2cf', ears:'dog',   nose:'#2a2220', tail:'dog'},
-  bear: {label:'Bear',  fur:'#8a5a3b', muzzle:'#d8b48c', ears:'round', nose:'#2a2220', tail:'stub'},
-  bunny:{label:'Bunny', fur:'#f1ece6', muzzle:'#ffffff', ears:'bunny', nose:'#f08aa0', tail:'puff', teeth:true},
-  fox:  {label:'Fox',   fur:'#e0712c', muzzle:'#fff5ea', ears:'fox',   nose:'#2a2220', tail:'fox'},
-  pig:  {label:'Pig',   fur:'#f3b0b5', ears:'pig',   tail:'curl', snout:true},
-  panda:{label:'Panda', fur:'#f4f4f2', muzzle:'#ffffff', ears:'panda', nose:'#2a2220', tail:'stub', patches:true}
+  human:  {label:'Human',   fur:'#d29a6e', ears:'human', iris:'#5a3a22', pitch:0, furLen:0,
+           shape:{w:1, h:1, d:.96, snout:0, cheek:.03, chin:.05}},
+  cat:    {label:'Cat',     fur:'#e8a15a', muzzle:'#fbeee0', ears:'cat', nose:'#e48a9a', tail:'cat', whiskers:true, iris:'#9ac23c', slit:true, furLen:.026, pitch:4, mark:'tabby',
+           shape:{w:1.06, h:.94, d:.95, snout:.07, snoutY:-.32, snoutCos:.8, taper:.25, cheek:.07}},
+  dog:    {label:'Dog',     fur:'#b98457', muzzle:'#f2e2cf', ears:'dog', nose:'#2a2220', tail:'dog', iris:'#5a3a1a', furLen:.028, pitch:1, mark:'patch', patch:'#6e4529',
+           shape:{w:1, h:.98, d:.95, snout:.17, snoutY:-.3, snoutCos:.78, taper:.4, cheek:.05}},
+  bear:   {label:'Bear',    fur:'#8a5a3b', muzzle:'#d8b48c', ears:'round', nose:'#2a2220', tail:'stub', iris:'#3a2414', furLen:.036, pitch:-3,
+           shape:{w:1.06, h:.96, d:.96, snout:.12, snoutY:-.32, snoutCos:.8, taper:.3, cheek:.07}},
+  bunny:  {label:'Bunny',   fur:'#f1ece6', muzzle:'#ffffff', ears:'bunny', nose:'#f08aa0', tail:'puff', teeth:true, iris:'#6b2f2f', furLen:.04, pitch:5,
+           shape:{w:.98, h:1.04, d:.98, snout:.06, snoutY:-.3, snoutCos:.82, taper:.2, cheek:.08}},
+  fox:    {label:'Fox',     fur:'#e0712c', muzzle:'#fff5ea', ears:'fox', nose:'#2a2220', tail:'fox', iris:'#d48a1c', slit:true, furLen:.032, pitch:2, mark:'fox',
+           shape:{w:1.02, h:.93, d:.95, snout:.25, snoutY:-.28, snoutCos:.74, taper:.62, cheek:.11}},
+  pig:    {label:'Pig',     fur:'#f3b0b5', ears:'pig', tail:'curl', snout:true, iris:'#3a2a2a', furLen:0, pitch:3,
+           shape:{w:1.04, h:.96, d:.98, snout:.1, snoutY:-.18, snoutCos:.86, taper:.12, cheek:.08}},
+  panda:  {label:'Panda',   fur:'#f4f4f2', muzzle:'#ffffff', ears:'panda', nose:'#2a2220', tail:'stub', iris:'#2a1a12', furLen:.036, pitch:1, mark:'panda', limbs:'#1d1b1a',
+           shape:{w:1.08, h:.95, d:.96, snout:.09, snoutY:-.33, snoutCos:.82, taper:.3, cheek:.08}},
+  tiger:  {label:'Tiger',   fur:'#e98a2a', muzzle:'#fff6ea', ears:'round', nose:'#d07a7a', tail:'tiger', whiskers:true, iris:'#d8a020', furLen:.022, pitch:-1, mark:'tiger',
+           shape:{w:1.06, h:.94, d:.95, snout:.11, snoutY:-.3, snoutCos:.79, taper:.3, cheek:.09}},
+  lion:   {label:'Lion',    fur:'#d9a45a', muzzle:'#f6e6c8', ears:'round', nose:'#6a4038', tail:'lion', mane:'#94531f', iris:'#c08a20', furLen:.022, pitch:-4,
+           shape:{w:1.04, h:.96, d:.96, snout:.13, snoutY:-.3, snoutCos:.79, taper:.32, cheek:.08}},
+  raccoon:{label:'Raccoon', fur:'#8d8a86', muzzle:'#f2f0ec', ears:'cat', nose:'#1f1c1b', tail:'ringed', whiskers:true, iris:'#2a1a10', furLen:.032, pitch:3, mark:'mask', limbs:'#3a3735',
+           shape:{w:1.04, h:.94, d:.95, snout:.15, snoutY:-.3, snoutCos:.78, taper:.5, cheek:.1}}
 };
-const HAIRS = {short:'Short', bob:'Bob', long:'Long', ponytail:'Ponytail', bun:'Bun', spiky:'Spiky', none:'None'};
+const HAIRS = {short:'Short', bob:'Bob', long:'Long', ponytail:'Ponytail', bun:'Bun', spiky:'Spiky', curly:'Curly', none:'None'};
 const STYLES = {pants:'Pants', shorts:'Shorts', skirt:'Skirt'};
 const SKIN_TONES = ['#f3d2b8','#e6b48f','#d29a6e','#b97b52','#9a6240','#7a4a2f','#5c3622','#3f2518'];
 const OUTFITS = [['#e8553f','#3b5aa8'],['#4f7fd6','#36415a'],['#2f8f83','#e9d8a6'],['#f2c14e','#5a4b8a'],['#8a5bd6','#2d2d36'],['#ffffff','#c0392b']];
@@ -1600,20 +1642,155 @@ function defaultChar(species){
   const sp = SPECIES[species] || SPECIES.human, k = objects.filter(o => o.type === 'character').length;
   const [top, bottom] = OUTFITS[k % OUTFITS.length];
   return {species, fur:sp.fur, muzzle:sp.muzzle || sp.fur, top, bottom, shoes:'#2d2a2a', style: species === 'human' && k % 2 ? 'skirt' : 'pants',
-          hair: species === 'human' ? ['short','ponytail','bob','spiky','bun','long'][k % 6] : 'none', hairColor:'#2b1d14', size:1};
+          hair: species === 'human' ? ['short','ponytail','bob','curly','bun','long'][k % 6] : 'none', hairColor:'#2b1d14', size:1,
+          furLen:1, voice:'', pitch:sp.pitch || 0, rate:1};
 }
+
+/* fur: concentric shells with procedural strands */
+const FUR_SHELLS = 16;
+let furView = 'full';
+const FUR_GLSL = `
+float furH(vec3 p){ p = fract(p * .1031); p += dot(p, p.zyx + 31.32); return fract((p.x + p.y) * p.z); }
+vec3 furH3(vec3 p){ p = fract(p * vec3(.1031, .1030, .0973)); p += dot(p, p.yxz + 33.33); return fract((p.xxy + p.yxx) * p.zyx); }
+float furClip(){
+  if(vFurM < 0.02 && uLayer > 0.05) discard;
+  vec3 q = vFurP * uDens; vec3 c = floor(q);
+  vec3 f = fract(q) - (0.28 + 0.44 * furH3(c));
+  f -= vFurN * dot(f, vFurN);
+  float len = (0.45 + 0.55 * furH(c + 7.0)) * vFurM;
+  if(uLayer > len) discard;
+  float r = 0.44 * (1.0 - uLayer / len) + 0.06;
+  if(dot(f, f) > r * r) discard;
+  return 0.82 + 0.36 * furH(c + 3.0);
+}`;
+function furMat(hex, layer, len, dens, grav, vcol, mask){
+  const m = new THREE.MeshStandardMaterial({roughness:.92, metalness:0, vertexColors:!!vcol, envMapIntensity:.25});
+  setMatColor(m, hex);
+  const U = {uLayer:{value:layer}, uLen:{value:len}, uDens:{value:dens}, uGrav:{value:grav}};
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = 'uniform float uLayer; uniform float uLen; uniform float uGrav; varying vec3 vFurP; varying vec3 vFurN; varying float vFurM;\n' + (mask ? 'attribute float furMask;\n' : '') +
+      sh.vertexShader.replace('#include <begin_vertex>', (mask ? 'vFurM = furMask;' : 'vFurM = 1.0;') + ' vec3 transformed = position + normal * (uLen * uLayer * vFurM); transformed.y -= uGrav * uLayer * uLayer * vFurM; vFurP = position; vFurN = normalize(normal);');
+    sh.fragmentShader = 'uniform float uLayer; uniform float uDens; varying vec3 vFurP; varying vec3 vFurN; varying float vFurM;\n' + FUR_GLSL + '\n' +
+      sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n  float furTone = furClip();\n  diffuseColor.rgb *= mix(0.45, 1.15, uLayer) * furTone;');
+  };
+  m.customProgramCacheKey = () => 'mmfur2' + (vcol ? 'v' : '') + (mask ? 'm' : '');
+  return m;
+}
+function addFur(mesh, len, hex, opts={}){
+  if(!(len > 0)) return;
+  const vcol = !!mesh.geometry.attributes.color && mesh.material.vertexColors;
+  const sx = Math.max(.2, (mesh.scale.x + mesh.scale.y + mesh.scale.z)/3);
+  const dens = (opts.dens || 120)*sx, grav = opts.grav ?? len*.55;
+  for(let i = 1; i <= FUR_SHELLS; i++){
+    const s = new THREE.Mesh(mesh.geometry, furMat(hex, i/FUR_SHELLS, len/sx, dens, grav/sx, vcol, !!mesh.geometry.attributes.furMask));
+    s.userData.shell = i; s.raycast = () => {}; s.castShadow = false; s.receiveShadow = true;
+    s.visible = furView === 'full' || (furView === 'light' && i % 3 === 0);
+    mesh.add(s);
+  }
+}
+function setFurView(mode){
+  furView = mode;
+  scene.traverse(n => { if(n.userData.shell) n.visible = mode === 'full' || (mode === 'light' && n.userData.shell % 3 === 0); });
+  document.querySelectorAll('[data-cmd="furView"]').forEach(b => b.classList.toggle('on', b.dataset.arg === mode));
+}
+function allFurVisible(){
+  if(furView === 'full') return () => {};
+  const list = []; scene.traverse(n => { if(n.userData.shell && !n.visible){ n.visible = true; list.push(n); } });
+  return () => list.forEach(n => n.visible = false);
+}
+
+/* geometry helpers */
+const _c = new THREE.Color();
+function paint(geo, fn){
+  const p = geo.attributes.position, n = p.count, col = new Float32Array(n*3), v = new THREE.Vector3();
+  for(let i = 0; i < n; i++){ v.fromBufferAttribute(p, i); fn(v, _c, i); _c.convertSRGBToLinear(); col[i*3] = _c.r; col[i*3+1] = _c.g; col[i*3+2] = _c.b; }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); return geo;
+}
+function smoothSeams(geo){
+  const p = geo.attributes.position, nn = geo.attributes.normal, map = new Map();
+  for(let i = 0; i < p.count; i++){
+    const k = `${p.getX(i).toFixed(4)},${p.getY(i).toFixed(4)},${p.getZ(i).toFixed(4)}`;
+    let e = map.get(k); if(!e){ e = {x:0, y:0, z:0, ids:[]}; map.set(k, e); }
+    e.x += nn.getX(i); e.y += nn.getY(i); e.z += nn.getZ(i); e.ids.push(i);
+  }
+  for(const e of map.values()){ if(e.ids.length < 2) continue; const l = Math.hypot(e.x, e.y, e.z) || 1; for(const i of e.ids) nn.setXYZ(i, e.x/l, e.y/l, e.z/l); }
+  nn.needsUpdate = true; return geo;
+}
+const sstep = (a, b, x) => { const t = clamp((x - a)/(b - a)); return t*t*(3 - 2*t); };
+function headShaper(sh, R){
+  const sd = new THREE.Vector3(0, sh.snoutY || -.3, 1).normalize();
+  const cheeks = [1,-1].map(s => new THREE.Vector3(.8*s, -.35, .45).normalize());
+  const chin = new THREE.Vector3(0, -.72, .7).normalize();
+  return d => {
+    const p = d.clone().multiplyScalar(R); p.x *= sh.w; p.y *= sh.h; p.z *= sh.d;
+    for(const cd of cheeks){ const w = sstep(.72, 1, d.dot(cd)); p.addScaledVector(cd, R*(sh.cheek || 0)*w); }
+    if(sh.chin){ const w = sstep(.8, 1, d.dot(chin)); p.addScaledVector(chin, R*sh.chin*w); }
+    if(d.y < -.45) p.y *= 1 - .12*sstep(-.45, -1, d.y);
+    if(sh.snout){
+      const w = sstep(sh.snoutCos, 1, d.dot(sd));
+      if(w > 0){
+        p.addScaledVector(sd, R*sh.snout*Math.pow(w, .8));
+        const along = p.dot(sd), perp = p.clone().addScaledVector(sd, -along);
+        perp.multiplyScalar(1 - (sh.taper || 0)*w*w);
+        p.copy(perp).addScaledVector(sd, along);
+      }
+    }
+    return p;
+  };
+}
+function markHead(c, sp, d, out){
+  const base = c.fur, muz = c.muzzle || base;
+  out.set(base);
+  const sd = new THREE.Vector3(0, -.32, 1).normalize();
+  if(c.species === 'human'){
+    for(const s of [1,-1]){ const w = sstep(.9, .99, d.dot(new THREE.Vector3(.5*s, -.25, .83).normalize())); if(w > 0) out.lerp(_c2.set('#e88a7a'), .35*w); }
+    return;
+  }
+  if(sp.muzzle){
+    let w = sstep(.78, .9, d.dot(sd));
+    if(sp.mark === 'fox' || sp.mark === 'tiger' || sp.mark === 'mask'){
+      for(const s of [1,-1]) w = Math.max(w, sstep(.8, .92, d.dot(new THREE.Vector3(.62*s, -.42, .66).normalize())));
+      w = Math.max(w, sstep(.55, .75, -d.y)*sstep(-.1, .4, d.z));
+    }
+    if(w > 0) out.lerp(_c2.set(muz), w);
+  }
+  if(sp.mark === 'panda') for(const s of [1,-1]){
+    const e = new THREE.Vector3(.38*s, .08, .92).normalize(), a = d.dot(e);
+    const up = d.y - e.y*a, side = (d.x - e.x*a)*s;
+    if(a > .9 && (side*side)/.03 + ((up + side*.6)*(up + side*.6))/.05 < 1.9) out.set('#1d1b1a');
+  }
+  if(sp.mark === 'mask'){
+    const band = sstep(.16, .04, Math.abs(d.y - .1)) * sstep(.25, .55, d.z) * sstep(.05, .25, Math.abs(d.x));
+    if(band > .2) out.lerp(_c2.set('#262322'), Math.min(1, band*1.4));
+  }
+  if(sp.mark === 'tiger' && d.y > -.2){
+    const t = Math.sin(Math.atan2(d.x, d.z)*7 + d.y*5 + Math.sin(d.y*9)*.8);
+    if(t > .72 && !(d.dot(sd) > .78)) out.set('#2a1d15');
+  }
+  if(sp.mark === 'tabby' && d.y > .35 && d.z > -.2){
+    const t = Math.sin(d.x*26 + Math.sin(d.y*6)*1.2);
+    if(t > .82) out.lerp(_c2.set(shade(base, .55)), .9);
+  }
+  if(sp.mark === 'patch'){ const w = sstep(.86, .95, d.dot(new THREE.Vector3(.42, .2, .88).normalize())); if(w > 0) out.lerp(_c2.set(sp.patch), w); }
+}
+const _c2 = new THREE.Color();
+
 function buildCharacter(o){
   if(o.rig){ o.mesh.remove(o.rig.mover); disposeMesh(o.rig.mover); }
   const c = o.char, sp = SPECIES[c.species] || SPECIES.human, human = c.species === 'human';
-  const fur = STD(c.fur), muz = STD(c.muzzle || c.fur), top = STD(c.top), bot = STD(c.bottom), shoe = STD(c.shoes, .45);
-  const dark = STD('#1b1716', .25), white = STD('#fbfbf8', .3), pink = STD('#f2a3b3', .6);
+  const furLen = (sp.furLen || 0)*(c.furLen ?? 1);
+  const limbHex = sp.limbs || c.fur;
+  const fur = STD(c.fur, .8), limbM = STD(limbHex, .8), top = STD(c.top, .78), bot = STD(c.bottom, .82), shoe = STD(c.shoes, .45);
+  const dark = STD('#141110', .2), white = STD('#fbfbf8', .12), pink = STD('#f2a3b3', .6);
   const browM = STD(human ? c.hairColor : shade(c.fur, .45));
   const mover = new THREE.Group(); o.mesh.add(mover);
   const root = new THREE.Group(); root.scale.setScalar(c.size || 1); mover.add(root);
   const J = {}, face = {};
   const joint = (n, parent, x=0, y=0, z=0) => { const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g); J[n] = g; return g; };
   const part = (geo, mat, parent, x=0, y=0, z=0, sx=1, sy=1, sz=1) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = m.receiveShadow = true; parent.add(m); return m; };
-  const sph = (r, ws=24, hs=16) => new THREE.SphereGeometry(r, ws, hs);
+  const sph = (r, ws=28, hs=18) => new THREE.SphereGeometry(r, ws, hs);
+  const furry = (m, k=1, hex, opts) => { if(!human) addFur(m, furLen*k, hex || (m.material.vertexColors ? '#ffffff' : '#' + m.material.color.clone().convertLinearToSRGB().getHexString()), opts); return m; };
   const L = .44;
   const hips = joint('hips', root, 0, L, 0);
   part(sph(.165), bot, hips, 0, .03, 0, 1.02, .62, .9);
@@ -1621,104 +1798,167 @@ function buildCharacter(o){
     const th = joint('th'+s, hips, .085*sx, 0, 0);
     part(capsuleGeo(.07, .08), bot, th);
     const kn = joint('kn'+s, th, 0, -.2, 0);
-    part(capsuleGeo(.062, .076), c.style === 'pants' ? bot : fur, kn);
+    const shin = part(capsuleGeo(.062, .076), c.style === 'pants' ? bot : (human ? fur : limbM), kn);
+    if(c.style !== 'pants') furry(shin, .8);
     const an = joint('an'+s, kn, 0, -.2, 0);
     part(sph(.072), shoe, an, 0, -.02, .045, 1, .6, 1.55);
   }
-  if(c.style === 'skirt'){ const sk = part(new THREE.CylinderGeometry(.15, .26, .24, 28, 1, true), bot, hips, 0, -.07, 0); sk.material = bot.clone(); sk.material.side = THREE.DoubleSide; }
+  if(c.style === 'skirt'){ const sk = part(new THREE.CylinderGeometry(.15, .26, .24, 32, 1, true), bot.clone(), hips, 0, -.07, 0); sk.material.side = THREE.DoubleSide; }
   const spine = joint('spine', hips, 0, .02, 0);
-  part(capsuleGeo(.165, .07), top, spine, 0, .38, 0, 1.08, 1, .9);
+  part(capsuleGeo(.165, .07, 24), top, spine, 0, .38, 0, 1.08, 1, .9);
   const chest = joint('chest', spine, 0, .3, 0);
   for(const [s, sx] of [['L',1],['R',-1]]){
     const sh = joint('sh'+s, chest, .2*sx, .02, 0);
     part(sph(.07), top, sh);
     part(capsuleGeo(.056, .066), top, sh);
     const el = joint('el'+s, sh, 0, -.17, 0);
-    part(capsuleGeo(.05, .06), fur, el);
-    part(sph(.064), fur, el, 0, -.18, .005, 1, 1.05, .9);
+    let fa = capsuleGeo(.05, .06), faM = human ? fur : limbM;
+    if(sp.mark === 'tiger'){ fa = paint(fa, (v, out) => { out.set(limbHex); if(Math.sin(v.y*70) > .6) out.set('#2a1d15'); }); faM = STD('#ffffff', .8); faM.vertexColors = true; }
+    furry(part(fa, faM, el), .8);
+    furry(part(sph(.064), human ? fur : limbM, el, 0, -.18, .005, 1, 1.05, .9), .6);
   }
   const neck = joint('neck', chest, 0, .07, 0);
-  part(new THREE.CylinderGeometry(.06, .07, .08, 16), fur, neck, 0, .02, 0);
+  furry(part(new THREE.CylinderGeometry(.06, .07, .08, 18), fur, neck, 0, .02, 0), .8);
   const head = joint('head', neck, 0, .05, 0);
-  const R = .3, hy = .27;
-  part(sph(R, 40, 28), fur, head, 0, hy, 0, 1, .96, .96);
-  if(sp.patches) for(const sx of [1,-1]){ const p = part(sph(.075), dark, head, .11*sx, hy+.02, .237, 1, 1.25, .45); p.rotation.z = .5*sx; }
-  const eye = sx => {
-    const g = new THREE.Group(); g.position.set(.105*sx, hy+.035, .25); head.add(g);
-    part(sph(.062), white, g, 0, 0, 0, 1, 1.18, .5);
-    part(sph(.036), dark, g, 0, -.005, .026, 1, 1.1, .6);
-    const hl = part(sph(.011, 8, 6), white, g, .014, .018, .045); hl.castShadow = false;
-    return g;
+  const R = .3, hy = .27, HC = new THREE.Vector3(0, hy, 0);
+  const shape = headShaper(sp.shape, R);
+  const surf = dir => shape(dir.clone().normalize()).add(HC);
+  const hg = new THREE.SphereGeometry(1, 96, 72), hp = hg.attributes.position, dv = new THREE.Vector3(), dirs = [];
+  for(let i = 0; i < hp.count; i++){ dv.fromBufferAttribute(hp, i).normalize(); dirs.push(dv.clone()); const p = shape(dv); hp.setXYZ(i, p.x, p.y, p.z); }
+  hg.computeVertexNormals(); smoothSeams(hg);
+  paint(hg, (v, out, i) => markHead(c, sp, dirs[i], out));
+  {
+    const eL = (human ? new THREE.Vector3(.36, .1, .93) : new THREE.Vector3(.38, .15, .9)).normalize(), eR = eL.clone(); eR.x *= -1;
+    const snd = new THREE.Vector3(0, sp.shape.snoutY || -.3, 1).normalize(), fm = new Float32Array(dirs.length);
+    for(let i = 0; i < dirs.length; i++){
+      const d = dirs[i];
+      let m = 1 - .85*sstep(.93, .975, Math.max(d.dot(eL), d.dot(eR)));
+      m = Math.min(m, 1 - .6*sstep(.9, .99, d.dot(snd)));
+      m = Math.min(m, .55 + .45*sstep(.92, .8, Math.max(d.dot(eL), d.dot(eR))));
+      fm[i] = m;
+    }
+    hg.setAttribute('furMask', new THREE.BufferAttribute(fm, 1));
+  }
+  const headMat = STD('#ffffff', human ? .55 : .8); headMat.vertexColors = true;
+  const headMesh = part(hg, headMat, head, 0, hy, 0);
+  furry(headMesh, 1, '#ffffff', {dens:135});
+  const orient = (obj, dir) => obj.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.clone().normalize());
+  const eyeDir = s => human ? new THREE.Vector3(.36*s, .1, .93) : new THREE.Vector3(.38*s, .15, .9);
+  const eyeR = .064;
+  const iris = STD(sp.iris || '#3a2a20', .25);
+  const eye = s => {
+    const d = eyeDir(s).normalize(), g = new THREE.Group();
+    g.position.copy(surf(d)).addScaledVector(d, -eyeR*.3 + (human ? 0 : furLen*.35)); orient(g, d); head.add(g);
+    const inner = new THREE.Group(); g.add(inner);
+    part(sph(eyeR, 32, 22), white, inner, 0, 0, 0, 1, 1.15, .55);
+    part(sph(.042, 28, 18), iris, inner, 0, -.004, .019, 1, 1.1, .45);
+    part(sph(.024, 20, 14), dark, inner, 0, -.004, .027, sp.slit ? .38 : 1, sp.slit ? 1.5 : 1.05, .4);
+    const hl = part(sph(.011, 10, 8), STD('#ffffff', .1), inner, .016, .02, .036); hl.castShadow = false; hl.material.emissive = new THREE.Color('#ffffff'); hl.material.emissiveIntensity = .6;
+    return inner;
   };
   face.eyeL = eye(1); face.eyeR = eye(-1);
-  const brow = sx => {
-    const g = new THREE.Group(); g.position.set(.105*sx, hy+.125, .245); head.add(g);
-    const b = part(centeredCapsule(.013, .045, 8), browM, g); b.rotation.z = Math.PI/2; b.castShadow = false;
-    return g;
+  const brow = s => {
+    const d = eyeDir(s).add(new THREE.Vector3(0, .2, -.02)).normalize(), base = new THREE.Group();
+    base.position.copy(surf(d)).addScaledVector(d, .006); orient(base, d); head.add(base);
+    const pivot = new THREE.Group(); base.add(pivot);
+    const b = part(centeredCapsule(.012, .045, 8), browM, pivot); b.rotation.z = Math.PI/2; b.castShadow = false;
+    return pivot;
   };
-  face.browL = brow(1); face.browR = brow(-1); face.browY = hy + .125;
-  let mouthY = hy - .1, mouthZ = .277;
+  face.browL = brow(1); face.browR = brow(-1); face.browY = 0;
+  const sd = new THREE.Vector3(0, sp.shape.snoutY || -.3, 1).normalize();
+  let mouthDir;
   if(human){
-    part(sph(.032), STD(shade(c.fur, .9)), head, 0, hy-.02, .29);
-    for(const sx of [1,-1]) part(sph(.055), fur, head, .29*sx, hy, 0, .45, .9, .75);
+    const nd = new THREE.Vector3(0, -.05, 1).normalize();
+    part(sph(.03), STD(shade(c.fur, .9)), head).position.copy(surf(nd));
+    for(const s of [1,-1]){ const ed = new THREE.Vector3(s, .02, -.05).normalize(); part(sph(.055), fur, head, 0, 0, 0, .45, .9, .75).position.copy(surf(ed)); }
+    mouthDir = new THREE.Vector3(0, -.36, .93).normalize();
   } else if(sp.snout){
-    const sn = part(new THREE.CylinderGeometry(.08, .085, .07, 24), STD(shade(c.fur, .88)), head, 0, hy-.05, .29); sn.rotation.x = Math.PI/2;
-    for(const sx of [1,-1]) part(sph(.016), dark, head, .03*sx, hy-.05, .326, 1, 1.4, .4);
-    mouthY = hy - .14; mouthZ = .255;
+    const tip = surf(sd), sn = part(new THREE.CylinderGeometry(.075, .082, .06, 28), STD(shade(c.fur, .88)), head);
+    sn.position.copy(tip).addScaledVector(sd, .01); sn.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), sd);
+    for(const s of [1,-1]){ const nh = part(sph(.016), dark, sn, .03*s, .031, 0, 1, .4, 1.4); }
+    mouthDir = sd.clone().add(new THREE.Vector3(0, -.5, 0)).normalize();
   } else {
-    const pointy = c.species === 'fox';
-    part(sph(.12), muz, head, 0, hy-.06, pointy ? .25 : .22, 1.15, .78, pointy ? 1.25 : .9);
-    part(sph(.034), STD(sp.nose, .35), head, 0, hy-.02, pointy ? .39 : .33, 1.25, .9, .9);
-    mouthY = hy - .105; mouthZ = pointy ? .37 : .31;
+    const tip = surf(sd), nose = part(sph(.036), STD(sp.nose, .3), head, 0, 0, 0, 1.3, .9, .9);
+    nose.position.copy(tip).addScaledVector(sd, .004); orient(nose, sd);
+    mouthDir = sd.clone().add(new THREE.Vector3(0, -.38, -.05)).normalize();
     if(sp.whiskers){
       const pts = [];
-      for(const sx of [1,-1]) for(const dy of [-.025, 0, .025]) pts.push(new THREE.Vector3(.07*sx, hy-.06, .31), new THREE.Vector3(.22*sx, hy-.06+dy*1.6, .27));
-      const w = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:0x3a302c}));
-      head.add(w);
+      for(const s of [1,-1]){ const a = surf(new THREE.Vector3(.42*s, -.36, .84)); for(const dy of [-.03, 0, .03]) pts.push(a.clone(), a.clone().add(new THREE.Vector3(.17*s, dy*1.4, -.05))); }
+      head.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:0xf4f1ea})));
     }
-    if(sp.teeth) part(new THREE.BoxGeometry(.04, .035, .012), white, head, 0, mouthY-.025, mouthZ-.004);
   }
-  const smileM = STD('#4a1c1c', .5);
-  face.smile = part(new THREE.TorusGeometry(.045, .011, 8, 20, Math.PI), smileM, head, 0, mouthY, mouthZ); face.smile.rotation.z = Math.PI; face.smile.castShadow = false;
-  face.open = part(sph(.05), STD('#5b1d22', .6), head, 0, mouthY-.012, mouthZ-.014, 1, .1, .45); face.open.castShadow = false;
-  const earM = c.species === 'panda' ? dark : fur;
-  for(const sx of [1,-1]){
+  const mouth = new THREE.Group(); mouth.position.copy(surf(mouthDir)).addScaledVector(mouthDir, .003); orient(mouth, mouthDir); head.add(mouth);
+  face.smile = part(new THREE.TorusGeometry(.042, .01, 8, 20, Math.PI), STD('#4a1c1c', .5), mouth); face.smile.rotation.z = Math.PI; face.smile.castShadow = false;
+  face.open = part(sph(.05), STD('#5b1d22', .6), mouth, 0, -.012, -.012, 1, .1, .45); face.open.castShadow = false;
+  if(sp.teeth) part(new THREE.BoxGeometry(.036, .03, .01), white, mouth, 0, -.025, -.003);
+  const earPaint = (inner) => (v, out) => { out.set(c.fur); if(v.z > 0 && Math.abs(v.x) < .045) out.lerp(_c2.set(inner), .9); };
+  for(const s of [1,-1]){
     switch(sp.ears){
       case 'cat': case 'fox': {
-        const big = sp.ears === 'fox';
-        const e = part(new THREE.ConeGeometry(big ? .1 : .085, big ? .22 : .16, 20), fur, head, .16*sx, hy + (big ? .33 : .3), -.02); e.rotation.z = -.32*sx;
-        part(new THREE.ConeGeometry(big ? .06 : .05, big ? .14 : .1, 16), big ? muz : pink, e, 0, -.02, .035, 1, 1, .5);
+        const big = sp.ears === 'fox' || c.species === 'raccoon' ? 1.2 : 1, h = .17*big, d = new THREE.Vector3(.55*s, .82, -.06).normalize();
+        const g = paint(new THREE.ConeGeometry(.09*big, h, 24, 4).translate(0, h/2, 0), earPaint(c.species === 'cat' ? '#f2a3b3' : c.muzzle || '#fff'));
+        const m = new THREE.MeshStandardMaterial({roughness:.8, vertexColors:true, envMapIntensity:.4, wireframe:wire});
+        const e = part(g, m, head); e.position.copy(surf(d)).addScaledVector(d, -.02); e.rotation.set(0, -.25*s, -.42*s);
+        furry(e, .55);
+        if(c.species === 'fox' || c.species === 'raccoon') part(new THREE.ConeGeometry(.04, .06, 12).translate(0, .03, 0), dark, e, 0, h - .05, 0);
         break; }
-      case 'dog': { const e = part(sph(.1), STD(shade(c.fur, .72)), head, .27*sx, hy+.08, -.01, .42, 1.15, .75); e.rotation.z = .22*sx; break; }
-      case 'round': case 'panda': part(sph(.085), earM, head, .2*sx, hy+.24, -.02, 1, 1, .6); break;
+      case 'dog': { const d = new THREE.Vector3(.93*s, .28, -.06).normalize(); const e = part(sph(.1), STD(shade(c.fur, .72), .85), head, 0, 0, 0, .42, 1.18, .78); e.position.copy(surf(d)).add(new THREE.Vector3(0, -.06, 0)); e.rotation.z = .24*s; furry(e, 1.3); break; }
+      case 'round': case 'panda': {
+        const d = new THREE.Vector3(.62*s, .76, -.08).normalize();
+        const g = paint(sph(.088), (v, out) => { out.set(sp.ears === 'panda' ? '#1d1b1a' : c.fur); if(sp.ears !== 'panda' && v.z > .03) out.lerp(_c2.set(c.muzzle || c.fur), .8); });
+        const m = new THREE.MeshStandardMaterial({roughness:.8, vertexColors:true, envMapIntensity:.4, wireframe:wire});
+        const e = part(g, m, head, 0, 0, 0, 1, 1, .55); e.position.copy(surf(d)); e.rotation.z = -.3*s; furry(e, .8);
+        break; }
       case 'bunny': {
-        const e = part(centeredCapsule(.055, .2), fur, head, .085*sx, hy+.4, -.02, 1, 1, .55); e.rotation.z = -.12*sx;
-        part(centeredCapsule(.032, .17), pink, e, 0, .01, .025, 1, 1, .4);
+        const d = new THREE.Vector3(.28*s, .96, -.05).normalize();
+        const g = paint(centeredCapsule(.055, .2, 20).translate(0, .155, 0), (v, out) => { out.set(c.fur); if(v.z > .015 && v.y > .02) out.lerp(_c2.set('#f2a8b6'), .85); });
+        const m = new THREE.MeshStandardMaterial({roughness:.85, vertexColors:true, envMapIntensity:.4, wireframe:wire});
+        const e = part(g, m, head, 0, 0, 0, 1, 1, .55); e.position.copy(surf(d)).addScaledVector(d, -.03); e.rotation.z = -.14*s; furry(e, .6);
         break; }
-      case 'pig': { const e = part(new THREE.ConeGeometry(.08, .13, 16), fur, head, .17*sx, hy+.26, .04); e.rotation.set(.7, 0, -.4*sx); break; }
+      case 'pig': { const d = new THREE.Vector3(.58*s, .76, .1).normalize(); const e = part(new THREE.ConeGeometry(.08, .13, 16).translate(0, .065, 0), fur, head); e.position.copy(surf(d)); e.rotation.set(.75, 0, -.45*s); break; }
     }
   }
+  if(sp.mane){
+    const mg = paint(new THREE.TorusGeometry(R*.86, R*.36, 28, 56), (v, out) => out.set(sp.mane).lerp(_c2.set(shade(sp.mane, 1.35)), clamp(.5 + v.y*2)));
+    const mm = STD('#ffffff', .9); mm.vertexColors = true;
+    const mane = part(mg, mm, head, 0, hy - .01, -.08, 1, 1.02, .9);
+    addFur(mane, .09, '#ffffff', {dens:70, grav:.04});
+  }
   if(human && c.hair !== 'none'){
-    const hm = STD(c.hairColor, .7);
-    const cap = (th, tilt) => { const m = part(new THREE.SphereGeometry(R*1.06, 40, 20, 0, Math.PI*2, 0, Math.PI*th), hm, head, 0, hy, 0, 1, .98, 1); m.rotation.x = tilt; return m; };
+    const hm = STD(c.hairColor, .7), hairFur = (m, k=1) => addFur(m, .026*k*(c.furLen ?? 1), c.hairColor, {dens:110, grav:.02});
+    const cap = (th, tilt) => { const m = part(new THREE.SphereGeometry(R*1.05, 48, 24, 0, Math.PI*2, 0, Math.PI*th), hm, head, 0, hy, 0, 1, .98, 1); m.rotation.x = tilt; hairFur(m); return m; };
     if(['short','ponytail','bun','spiky'].includes(c.hair)) cap(.42, -.38);
     if(c.hair === 'bob') cap(.6, -.7);
-    if(c.hair === 'long'){ cap(.5, -.6); part(capsuleGeo(.2, .1), hm, head, 0, hy+.12, -.14, 1.25, 1, .55); }
-    if(c.hair === 'ponytail'){ part(sph(.08), hm, head, 0, hy+.2, -.3); const pt = part(capsuleGeo(.065, .12), hm, head, 0, hy+.2, -.33); pt.rotation.x = .5; }
-    if(c.hair === 'bun') part(sph(.11), hm, head, 0, hy+.31, -.08);
+    if(c.hair === 'long'){ cap(.5, -.6); hairFur(part(capsuleGeo(.2, .1), hm, head, 0, hy+.12, -.14, 1.25, 1, .55)); }
+    if(c.hair === 'ponytail'){ part(sph(.08), hm, head, 0, hy+.2, -.3); const pt = part(capsuleGeo(.065, .12), hm, head, 0, hy+.2, -.33); pt.rotation.x = .5; hairFur(pt, .8); }
+    if(c.hair === 'bun') hairFur(part(sph(.11), hm, head, 0, hy+.31, -.08), .7);
     if(c.hair === 'spiky') for(let i = 0; i < 7; i++){ const a = i/7*Math.PI*2; const k = part(new THREE.ConeGeometry(.06, .16, 10), hm, head, sin(a)*.14, hy+.27, cos(a)*.14-.04); k.rotation.set(cos(a)*.6, 0, -sin(a)*.6); }
+    if(c.hair === 'curly'){ cap(.45, -.4); for(let i = 0; i < 16; i++){ const a = i*2.39996, yy = .55 + .4*((i*37)%16)/16; const d = new THREE.Vector3(sin(a)*Math.sqrt(1 - yy*yy), yy, cos(a)*Math.sqrt(1 - yy*yy) - .25).normalize();
+      const p = part(sph(.075, 16, 12), hm, head); p.position.copy(HC).addScaledVector(d, R*1.07); hairFur(p, .7); } }
   }
   const tail = joint('tail', hips, 0, .03, -.15);
+  const tailM = () => new THREE.MeshStandardMaterial({roughness:.85, vertexColors:true, envMapIntensity:.4, wireframe:wire});
   switch(sp.tail){
-    case 'cat': { const curve = new THREE.CatmullRomCurve3([[0,0,0],[0,.03,-.12],[0,.16,-.22],[0,.3,-.18]].map(p => new THREE.Vector3(...p))); part(new THREE.TubeGeometry(curve, 24, .028, 10), fur, tail); part(sph(.03), fur, tail, 0, .3, -.18); break; }
-    case 'fox': { const b = part(sph(.1), fur, tail, 0, .08, -.16, .75, .75, 1.9); b.rotation.x = .7; part(sph(.06), muz, tail, 0, .21, -.32, 1, 1, 1.2); break; }
-    case 'dog': { const t = part(centeredCapsule(.03, .12), fur, tail, 0, .06, -.04); t.rotation.x = -.6; break; }
-    case 'stub': part(sph(.05), c.species === 'panda' ? dark : fur, tail, 0, 0, -.02); break;
-    case 'puff': part(sph(.065), STD('#ffffff'), tail, 0, 0, -.02); break;
+    case 'cat': case 'tiger': case 'lion': {
+      const curve = new THREE.CatmullRomCurve3([[0,0,0],[0,.03,-.12],[0,.16,-.24],[0,.32,-.2]].map(p => new THREE.Vector3(...p)));
+      const g = new THREE.TubeGeometry(curve, 40, .03, 12), uv = g.attributes.uv;
+      paint(g, (v, out, i) => { out.set(c.fur); const u = uv.getX(i); if(sp.tail === 'tiger' && Math.sin(u*40) > .55) out.set('#2a1d15'); });
+      const t = part(g, tailM(), tail); furry(t, .9);
+      const tip = part(sph(.034), sp.tail === 'lion' ? STD(sp.mane, .9) : STD(sp.tail === 'tiger' ? '#2a1d15' : c.fur, .85), tail, 0, .32, -.2);
+      furry(tip, sp.tail === 'lion' ? 2.6 : 1, sp.tail === 'lion' ? sp.mane : undefined);
+      break; }
+    case 'fox': case 'ringed': {
+      const g = paint(sph(.1, 32, 24), (v, out) => {
+        out.set(c.fur);
+        if(sp.tail === 'fox' && v.z < -.06) out.lerp(_c2.set(c.muzzle || '#fff'), sstep(-.06, -.085, v.z));
+        if(sp.tail === 'ringed' && Math.sin(v.z*60) > .2) out.set('#2b2826');
+      });
+      const b = part(g, tailM(), tail, 0, .08, -.16, .75, .75, 1.9); b.rotation.x = .7; furry(b, 1.9, undefined, {dens:90});
+      break; }
+    case 'dog': { const t = part(centeredCapsule(.03, .12), fur, tail, 0, .06, -.04); t.rotation.x = -.6; furry(t, 1.2); break; }
+    case 'stub': furry(part(sph(.05), sp.limbs ? limbM : fur, tail, 0, 0, -.02), 1.2); break;
+    case 'puff': furry(part(sph(.06), STD('#ffffff', .9), tail, 0, 0, -.02), 1.6); break;
     case 'curl': { const t = part(new THREE.TorusGeometry(.04, .012, 8, 16, Math.PI*1.6), fur, tail, 0, .03, -.03); t.rotation.y = Math.PI/2; break; }
-  }
-  if(c.species === 'panda'){
-    const lm = dark; [J.shL, J.shR, J.elL, J.elR].forEach(j => j.children.forEach(m => { if(m.isMesh && m.material === fur) m.material = lm; }));
   }
   o.rig = {mover, root, J, face};
 }
@@ -1726,7 +1966,7 @@ function buildCharacter(o){
 /* ----- poses & actions ----- */
 const ZERO = [0,0,0];
 const REST = {shL:[0,0,.1], shR:[0,0,-.1], elL:[-.12,0,0], elR:[-.12,0,0]};
-const FACE0 = {blink:0, open:0, smile:.25, brow:0, up:0};
+const FACE0 = {blink:0, open:0, smile:.25, brow:0, up:0, wide:.3};
 const EXPR = {neutral:{}, happy:{smile:1, up:.2}, sad:{smile:-.8, brow:.9}, angry:{smile:-.45, brow:-1}, surprised:{open:.75, up:1, smile:0}};
 function mergePose(...ps){ const out = {face:{}}; for(const p of ps){ if(!p) continue; for(const k in p){ if(k === 'face') Object.assign(out.face, p.face); else out[k] = p[k]; } } return out; }
 function blendPose(A, B, w){
@@ -1822,7 +2062,11 @@ function clipPose(c, f){
   const t = Math.max(0, f - c.start)/fps, u = clamp((f - c.start)/c.dur);
   const P = mergePose(REST, A.fn(t, u, {dur:c.dur/fps, ph:2*Math.PI*(c._cad || 1.6)*t}));
   P.face = Object.assign({}, EXPR[c.p.expr || A.expr || 'neutral'] || {}, P.face);
-  if(c.p.talk ?? A.talk) P.face.open = Math.max(P.face.open || 0, talkMouth(t));
+  const vz = c.p.voice ? voiceAt(c.p.voice.asset, t) : null;
+  if(vz){
+    P.face.open = Math.max((P.face.open || 0)*.3, vz.open); P.face.wide = vz.wide;
+    const h = P.head || ZERO; P.head = [h[0] + .07*vz.open - .02, h[1], h[2] + .03*Math.sin(t*2.1)*vz.open];
+  } else if(c.p.talk ?? A.talk) P.face.open = Math.max(P.face.open || 0, talkMouth(t));
   return P;
 }
 const IDLE_CLIP = {action:'idle', start:0, dur:1e9, p:{}};
@@ -1858,9 +2102,9 @@ function applyPose(o, P){
   const F = Object.assign({}, FACE0, P.face), fc = r.face;
   fc.eyeL.scale.y = fc.eyeR.scale.y = 1 - .92*clamp(F.blink);
   fc.smile.scale.set(1, abs(F.smile) < .15 ? .15 : F.smile, 1);
-  fc.open.scale.set(1 + F.up*.1, .1 + .9*clamp(F.open), .45); fc.open.visible = F.open > .04;
+  fc.open.scale.set((1 + F.up*.1)*(.78 + .5*clamp(F.wide)), .1 + .9*clamp(F.open)*(1.1 - .35*clamp(F.wide)), .45); fc.open.visible = F.open > .04;
   fc.browL.rotation.z = -F.brow*.4; fc.browR.rotation.z = F.brow*.4;
-  fc.browL.position.y = fc.browR.position.y = fc.browY + F.up*.035;
+  fc.browL.position.y = fc.browR.position.y = fc.browY + F.up*.03;
 }
 function evalCharacter(o, f){
   if(!o.rig) return;
@@ -2108,7 +2352,12 @@ function drawStory(){
       roundRect(sctx, x0 + 1, y + 4, Math.max(4, x1 - x0 - 2), SH - 8, 4); sctx.fill(); sctx.globalAlpha = 1;
       if(c.id === selClip){ sctx.strokeStyle = css('--sel'); sctx.lineWidth = 2; roundRect(sctx, x0 + 1, y + 4, Math.max(4, x1 - x0 - 2), SH - 8, 4); sctx.stroke(); }
       let label = c.kind === 'shot' ? ((byId(c.obj) || {}).name || 'missing camera') : (A ? A.label : c.action);
-      if(c.p.say) label += `: "${c.p.say}"`;
+      if(c.p.voice && voiceEnv[c.p.voice.asset]){
+        const e = voiceEnv[c.p.voice.asset], vx1 = sx(c.start + e.dur*fps, w);
+        sctx.fillStyle = 'rgba(255,255,255,.35)';
+        for(let px = x0 + 2; px < Math.min(vx1, x1 - 2); px += 2){ const v = e.a[Math.floor((px - x0)/(vx1 - x0)*e.a.length)] || 0; sctx.fillRect(px, y + SH/2 - v*(SH/2 - 6), 1, Math.max(1, v*(SH - 12))); }
+      }
+      if(c.p.say) label = (c.p.voice ? (staleVoice(c) ? '⟳ ' : '🔊 ') : '') + label + `: "${c.p.say}"`;
       if(A && A.loco && !c.p.to) label += ' (in place)';
       sctx.save(); sctx.beginPath(); sctx.rect(x0 + 4, y, Math.max(0, x1 - x0 - 8), SH); sctx.clip();
       sctx.fillStyle = '#ffffff'; sctx.fillText(label, x0 + 7, y + SH/2); sctx.restore();
@@ -2178,6 +2427,10 @@ function refreshClipEditor(){
   $('#ceExprW').hidden = $('#ceTalkW').hidden = $('#ceSayW').hidden = !act || (o && o.type === 'model');
   $('#ceSayW').hidden = !act;
   $('#ceTurnW').hidden = !act || !!(A && A.loco);
+  const tts = !!(server && server.tts);
+  $('#ceSpeak').hidden = !(act && tts && c.p.say && o && o.type === 'character');
+  $('#ceSpeak').textContent = c.p.voice ? (staleVoice(c) ? 'Re-voice (line or voice changed)' : 'Re-voice line') : 'Speak line';
+  $('#ceSpeakAll').hidden = !(tts && story.clips.some(staleVoice));
   $('#cePick').hidden = !(act && A && A.loco);
   $('#ceClipW').hidden = $('#ceLoopW').hidden = !(o && o.type === 'model');
   setv('#ceExpr', c.p.expr || ''); setv('#ceTalk', c.p.talk ?? (A && A.talk)); setv('#ceSay', c.p.say || ''); setv('#ceTurn', c.p.turn ?? '');
@@ -2189,7 +2442,10 @@ clipField('#ceStart', (c, el) => { const v = Math.round(+el.value); if(isFinite(
 clipField('#ceDur', (c, el) => { const v = Math.round(+el.value); if(isFinite(v) && v >= 2) c.dur = v; });
 clipField('#ceExpr', (c, el) => { if(el.value) c.p.expr = el.value; else delete c.p.expr; });
 clipField('#ceTalk', (c, el) => { c.p.talk = el.checked; });
-clipField('#ceSay', (c, el) => { const v = el.value.trim(); if(v){ c.p.say = v; if(c.p.talk == null) c.p.talk = true; } else delete c.p.say; });
+clipField('#ceSay', (c, el) => { const v = el.value.trim(); if(v){ c.p.say = v; if(c.p.talk == null) c.p.talk = true; } else { delete c.p.say; delete c.p.voice; }
+  const o = byId(c.obj); if(v && server && server.tts && ttsVoices.length && o && o.type === 'character' && staleVoice(c)) setTimeout(() => voiceClips([c], 'Voicing line'), 0); });
+$('#ceSpeak').addEventListener('click', () => { const c = clipById(selClip); if(c) voiceClips([c], 'Voicing line'); });
+$('#ceSpeakAll').addEventListener('click', () => voiceClips(story.clips.filter(staleVoice), 'Voicing line'));
 clipField('#ceTurn', (c, el) => { if(el.value === '') delete c.p.turn; else c.p.turn = +el.value; });
 clipField('#ceClip', (c, el) => { c.p.clip = el.value; });
 clipField('#ceLoop', (c, el) => { c.p.loop = el.checked; });
@@ -2211,28 +2467,134 @@ function toggleBottom(which, force){
 }
 new ResizeObserver(() => drawStory()).observe(scv);
 
-/* ----- audio ----- */
-let audioEl = null, audioDur = 0, audioPeaks = null;
+/* ----- audio & voices ----- */
+let audioEl = null, audioDur = 0, audioPeaks = null, actx = null;
+const getAC = () => actx || (actx = new (window.AudioContext || window.webkitAudioContext)());
 function loadAudio(){
   if(audioEl){ audioEl.pause(); audioEl = null; } audioPeaks = null; audioDur = 0;
   if(!story.audio) return drawStory();
   const url = assetURL(story.audio.asset); if(!url) return;
   audioEl = new Audio(url); audioEl.preload = 'auto'; audioEl.volume = story.audio.vol ?? 1;
-  fetch(url).then(r => r.arrayBuffer()).then(b => new (window.AudioContext || window.webkitAudioContext)().decodeAudioData(b)).then(buf => {
+  fetch(url).then(r => r.arrayBuffer()).then(b => getAC().decodeAudioData(b)).then(buf => {
     audioDur = buf.duration; const d = buf.getChannelData(0), n = 800, step = Math.floor(d.length/n) || 1; audioPeaks = [];
     for(let i = 0; i < n; i++){ let m = 0; for(let j = i*step; j < (i+1)*step && j < d.length; j += 8) m = Math.max(m, abs(d[j])); audioPeaks.push(m); }
     drawStory();
   }).catch(() => {});
 }
-let audioTimer = null;
-function syncAudio(){
-  if(!audioEl || !story.audio) return;
-  clearTimeout(audioTimer);
-  if(!playing){ audioEl.pause(); return; }
-  const t = (frame - story.audio.start)/fps;
-  if(t >= 0){ try{ audioEl.currentTime = t; }catch(e){} audioEl.play().catch(() => {}); }
-  else { audioEl.pause(); audioTimer = setTimeout(() => { if(playing){ audioEl.currentTime = 0; audioEl.play().catch(() => {}); } }, -t*1000); }
+const voiceEnv = {}, voiceLoading = {};
+function loadVoiceEnv(asset){
+  if(voiceEnv[asset]) return Promise.resolve(voiceEnv[asset]);
+  if(voiceLoading[asset]) return voiceLoading[asset];
+  const url = assetURL(asset); if(!url) return Promise.resolve(null);
+  return voiceLoading[asset] = fetch(url).then(r => { if(!r.ok) throw new Error('missing'); return r.arrayBuffer(); }).then(b => getAC().decodeAudioData(b)).then(buf => {
+    const d = buf.getChannelData(0), sr = buf.sampleRate, hop = Math.max(1, Math.round(sr/100)), n = Math.ceil(d.length/hop);
+    const a = new Float32Array(n), z = new Float32Array(n);
+    for(let i = 0; i < n; i++){
+      let s = 0, zc = 0; const j0 = i*hop, j1 = Math.min(d.length, j0 + hop);
+      for(let j = j0; j < j1; j++){ s += d[j]*d[j]; if(j > j0 && (d[j] >= 0) !== (d[j-1] >= 0)) zc++; }
+      a[i] = Math.sqrt(s/Math.max(1, j1 - j0)); z[i] = zc/Math.max(1, j1 - j0);
+    }
+    const sorted = Array.from(a).sort((x, y) => x - y), ref = sorted[Math.floor(n*.95)] || 1;
+    let prev = 0;
+    for(let i = 0; i < n; i++){
+      const v = clamp((a[i]/ref - .08)/.92); const tgt = Math.pow(v, .7);
+      prev = tgt > prev ? prev + (tgt - prev)*.7 : prev + (tgt - prev)*.35; a[i] = prev;
+      z[i] = clamp((z[i] - .04)/.22);
+    }
+    voiceEnv[asset] = {a, z, dur:buf.duration}; delete voiceLoading[asset];
+    applyFrame(); drawStory(); return voiceEnv[asset];
+  }).catch(() => { delete voiceLoading[asset]; return null; });
 }
+function voiceAt(asset, t){
+  const e = voiceEnv[asset];
+  if(!e){ loadVoiceEnv(asset); return null; }
+  const i = Math.floor(t*100);
+  if(i < 0 || i >= e.a.length) return {open:0, wide:.3};
+  return {open:e.a[i], wide:e.z[i]};
+}
+const voiceEls = {};
+function trackList(){
+  const t = [];
+  if(story.audio) t.push({key:'music', asset:story.audio.asset, start:story.audio.start, vol:story.audio.vol ?? 1});
+  for(const c of story.clips){
+    const o = byId(c.obj);
+    if(c.kind === 'act' && c.p.voice && c.p.voice.asset && o && isShown(o)) t.push({key:'v' + c.id + ':' + c.p.voice.asset, asset:c.p.voice.asset, start:c.start, vol:c.p.vol ?? 1});
+  }
+  return t;
+}
+let audioTimers = [];
+function syncAudio(){
+  audioTimers.forEach(clearTimeout); audioTimers = [];
+  const used = new Set();
+  for(const tr of trackList()){
+    let el = tr.key === 'music' ? audioEl : voiceEls[tr.key];
+    if(!el && tr.key !== 'music'){ const u = assetURL(tr.asset); if(!u) continue; el = voiceEls[tr.key] = new Audio(u); el.preload = 'auto'; }
+    if(!el) continue;
+    used.add(el); el.volume = clamp(tr.vol);
+    if(!playing){ el.pause(); continue; }
+    const t = (frame - tr.start)/fps;
+    if(t >= 0){ if(el.duration && t >= el.duration){ el.pause(); continue; } try{ el.currentTime = t; }catch(e){} el.play().catch(() => {}); }
+    else { el.pause(); audioTimers.push(setTimeout(() => { if(playing){ try{ el.currentTime = 0; }catch(e){} el.play().catch(() => {}); } }, -t*1000)); }
+  }
+  for(const k in voiceEls) if(!used.has(voiceEls[k])) voiceEls[k].pause();
+}
+
+let ttsVoices = [];
+const LANGS = {en:'English', hi:'Hindi', ne:'Nepali', ta:'Tamil', bn:'Bengali', ur:'Urdu', mr:'Marathi', gu:'Gujarati', te:'Telugu', kn:'Kannada', ml:'Malayalam', pa:'Punjabi', si:'Sinhala',
+  es:'Spanish', fr:'French', de:'German', it:'Italian', pt:'Portuguese', zh:'Chinese', ja:'Japanese', ko:'Korean', ar:'Arabic', ru:'Russian', tr:'Turkish', vi:'Vietnamese', id:'Indonesian', th:'Thai', fa:'Persian', sw:'Swahili', nl:'Dutch', pl:'Polish'};
+const langName = code => LANGS[(code || '').slice(0, 2).toLowerCase()] || code || 'Other';
+async function loadVoices(){
+  if(!server || !server.tts) return;
+  try{ const j = await api('tts/voices'); ttsVoices = j.voices || []; }catch(e){ ttsVoices = []; }
+  fillVoiceSelect(); refreshClipEditor();
+}
+function fillVoiceSelect(){
+  const s = $('#cVoice'); if(!s) return;
+  const groups = {};
+  for(const v of ttsVoices){ const g = langName(v.lang); (groups[g] ||= []).push(v); }
+  const order = Object.keys(groups).sort((a, b) => (a === 'English' ? -1 : b === 'English' ? 1 : 0) || ['Nepali','Hindi'].indexOf(b) - ['Nepali','Hindi'].indexOf(a) || a.localeCompare(b));
+  s.innerHTML = '<option value="">Automatic</option>' + order.map(g => `<optgroup label="${g}">` + groups[g].map(v => `<option value="${v.id.replace(/"/g,'&quot;')}">${v.name.replace(/</g,'')} (${v.engine})</option>`).join('') + '</optgroup>').join('');
+}
+function voiceFor(o){
+  const v = o.char && o.char.voice;
+  if(v && ttsVoices.some(x => x.id === v)) return v;
+  if(!ttsVoices.length) return null;
+  const en = ttsVoices.filter(x => /^en/i.test(x.lang) && x.engine === 'piper');
+  const list = en.length ? en : ttsVoices.filter(x => /^en/i.test(x.lang)).length ? ttsVoices.filter(x => /^en/i.test(x.lang)) : ttsVoices;
+  const i = objects.filter(x => x.type === 'character').indexOf(o);
+  return list[Math.max(0, i) % list.length].id;
+}
+function voiceKey(c, o){ const ch = o.char || {}; return [c.p.say, voiceFor(o), ch.pitch ?? 0, ch.rate ?? 1].join('|'); }
+async function speakClip(c){
+  const o = byId(c.obj); if(!o || !c.p.say) return false;
+  const voice = voiceFor(o); if(!voice) throw new Error('No voices on the studio yet. Re-run the installer to add them.');
+  const ch = o.char || {};
+  const j = await api('tts', {method:'POST', body:JSON.stringify({text:c.p.say, voice, pitch:ch.pitch ?? 0, rate:ch.rate ?? 1})});
+  c.p.voice = {asset:j.asset, dur:j.duration, key:voiceKey(c, o)}; c.p.talk = true;
+  const oldEnd = c.start + c.dur, need = Math.ceil(j.duration*fps) + 8;
+  if(need > c.dur){
+    const delta = need - c.dur; c.dur = need;
+    for(const x of story.clips) if(x !== c && x.start >= oldEnd - 2) x.start += delta;
+    for(const x of story.clips) if(x !== c && x.obj !== c.obj && x.start < oldEnd - 2 && x.start + x.dur >= oldEnd - 2 && !(ACTIONS[x.action] || {}).loco) x.dur += delta;
+    if(story.audio && story.audio.start >= oldEnd) story.audio.start += delta;
+    end += delta; syncTime();
+  }
+  fitRange(c);
+  await loadVoiceEnv(j.asset);
+  return true;
+}
+async function voiceClips(list, label){
+  if(!server || !server.tts) return toast('Voices need the local studio server');
+  if(!list.length) return toast('No lines to voice. Type a Line on a clip first.');
+  let n = 0;
+  for(const c of list){
+    toast(`${label} ${++n} of ${list.length}…`);
+    try{ await speakClip(c); }catch(e){ toast(e.message); return; }
+  }
+  applyFrame(); commit(); drawStory(); refreshClipEditor(); drawTimeline();
+  toast(list.length === 1 ? 'Line voiced. Press Space to hear it.' : `${list.length} lines voiced`);
+}
+const staleVoice = c => { const o = byId(c.obj); return c.p.say && o && (!c.p.voice || c.p.voice.key !== voiceKey(c, o)); };
 
 /* ----- media import ----- */
 function pickFile(accept, cb){ const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => i.files[0] && cb(i.files[0]); i.click(); }
@@ -2303,9 +2665,9 @@ function renderFrame(f, w, h, ss){
   const cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha();
   renderer.setRenderTarget(rt); renderer.setScissorTest(false);
   renderer.setClearColor(new THREE.Color(rset.bg), 1); renderer.clear();
-  const restore = hideHelpers(); grid.visible = rset.grid;
+  const restore = hideHelpers(), furBack = allFurVisible(); grid.visible = rset.grid;
   renderer.render(scene, cam);
-  restore();
+  furBack(); restore();
   const buf = new Uint8Array(W*H*4);
   renderer.readRenderTargetPixels(rt, 0, 0, W, H, buf);
   renderer.setRenderTarget(null); renderer.setClearColor(cc, ca);
@@ -2431,7 +2793,7 @@ async function renderMovie(){
     if(pending) await pending;
     dmsg('Encoding MP4 with ffmpeg…');
     const res = await api(`render/${id}/finish`, {method:'POST', body:JSON.stringify({fps, frames:total, name:`${baseName()}-${movie.preset.replace(':','x')}-${stamp()}`,
-      audio: story.audio ? story.audio.asset : null, audioStart: story.audio ? (story.audio.start - start)/fps : 0, volume: story.audio ? story.audio.vol ?? 1 : 1})});
+      tracks: trackList().map(tr => ({asset:tr.asset, start:(tr.start - start)/fps, vol:tr.vol}))})});
     $('#rPrev').innerHTML = `<video controls autoplay playsinline src="${res.url}"></video>`;
     dmsg(`${res.name}.mp4, ${w} × ${h}, ${(res.size/1048576).toFixed(1)} MB, saved in the studio's renders folder`);
     setDlgButtons([{label:'Render again', onClick:renderMovie}, {label:'Download MP4', primary:true, onClick:() => { const a = document.createElement('a'); a.href = res.url; a.download = res.name + '.mp4'; document.body.appendChild(a); a.click(); a.remove(); }}]);
@@ -2480,7 +2842,7 @@ function renderFilmView(w, h){
 function seedMovie(){
   removeObjects(objects.slice()); story = {clips:[], audio:null}; nextId = 1;
   env = Object.assign({}, ENV0); applyEnv();
-  start = 1; end = 216; frame = 1; fps = 24;
+  start = 1; end = 260; frame = 1; fps = 24;
   const P = (kind, x, z, ry=0, s=1) => makeObject({id:nextId++, name:uniqueName(kind), type:'prop', prop:{kind}, p:[x,0,z], r:[0,ry,0], s:[s,s,s]});
   P('house', -4.6, -5.2, .35); P('tree', 3.6, -3.6); P('tree', 5.6, -1.2, 0, .85); P('tree', -6.2, -2.2, 0, 1.1); P('tree', -2.6, -2.9, 0, .9);
   P('pine', 1.2, -6.6); P('pine', -1.4, -7.4, 0, 1.2); P('pine', 6.5, -6, 0, 1.1);
@@ -2497,12 +2859,12 @@ function seedMovie(){
   let id = 1;
   const A = (o, action, s, d, p={}) => story.clips.push({id:id++, kind:'act', obj:o.id, action, start:s, dur:d, p});
   A(mila, 'look', 1, 24); A(mila, 'walk', 25, 58, {to:[-.75, 1.45]}); A(mila, 'wave', 84, 32, {turn:40});
-  A(mila, 'talk', 116, 46, {say:'Hi Rusty! Want to see my new dance?', expr:'happy', talk:true, turn:40}); A(mila, 'dance', 168, 49, {turn:15});
-  A(rusty, 'look', 30, 40); A(rusty, 'wave', 90, 30, {turn:-40}); A(rusty, 'surprised', 160, 22, {say:'Whoa! Show me!', talk:true, turn:-40}); A(rusty, 'dance', 184, 33, {turn:-15});
-  A(pip, 'sit', -20, 179, {turn:20}); A(pip, 'cheer', 168, 49, {turn:10});
+  A(mila, 'talk', 116, 60, {say:'Hi Rusty! Want to see my new dance?', expr:'happy', talk:true, turn:40}); A(mila, 'dance', 208, 53, {turn:15});
+  A(rusty, 'look', 30, 40); A(rusty, 'wave', 90, 30, {turn:-40}); A(rusty, 'surprised', 178, 28, {say:'Whoa! Show me!', talk:true, turn:-40}); A(rusty, 'dance', 214, 47, {turn:-15});
+  A(pip, 'sit', -20, 226, {turn:20}); A(pip, 'cheer', 208, 53, {turn:10});
   story.clips.push({id:id++, kind:'shot', obj:cam1.id, start:1, dur:107, p:{}});
-  story.clips.push({id:id++, kind:'shot', obj:cam2.id, start:108, dur:60, p:{}});
-  story.clips.push({id:id++, kind:'shot', obj:cam1.id, start:168, dur:49, p:{}});
+  story.clips.push({id:id++, kind:'shot', obj:cam2.id, start:108, dur:100, p:{}});
+  story.clips.push({id:id++, kind:'shot', obj:cam1.id, start:208, dur:53, p:{}});
   studioName = 'first_movie';
 }
 
@@ -2524,6 +2886,8 @@ async function api(path, opts){
   try{
     const j = await api('health');
     if(j && j.app === 'minimaya'){ server = j; document.body.classList.add('has-server'); updateStatus();
+      await loadVoices();
+      if(demoBoot && ttsVoices.length && story.clips.some(staleVoice)) voiceClips(story.clips.filter(staleVoice), 'Giving the demo voices');
       try{ studioName = localStorage.getItem('miniMaya.studioName'); }catch(e){} updateStatus(); }
   }catch(e){}
 })();
@@ -2644,6 +3008,7 @@ function run(cmd, arg){
     case 'view': setView(arg); break;
     case 'shaded': setWire(false); break;
     case 'wire': setWire(true); break;
+    case 'furView': setFurView(arg); break;
     case 'grid': grid.visible = !grid.visible; break;
     case 'graph': toggleBottom('graph'); break;
     case 'story': toggleBottom('story'); break;

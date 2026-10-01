@@ -1,0 +1,7 @@
+# Piper voices to download: full names, or a language code to fetch the best two for it.
+# Browse: https://huggingface.co/rhasspy/piper-voices  Re-run install.sh after editing.
+en_US-amy-medium
+en_US-ryan-medium
+en_GB-alba-medium
+hi_IN
+ne_NP
