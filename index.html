@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mini Maya Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --chrome:#c4c8cd; --chrome-deep:#b2b7bd; --chrome-raised:#d5d8dc; --line:#959ba2;
+  --text:#1d2127; --text-dim:#545b64; --sel:#c98a12; --sel-ink:#1b1406; --sel2:#f5f7fa; --key:#c63f37;
+  --vp-top:#a8b2bc; --vp-bot:#78828d; --field:#eceef0; --tl-bg:#b9bec4; --tl-tick:#5d646c;
+  --graph-bg:#d9dcdf; --graph-grid:rgba(0,0,0,.09); --hover:rgba(0,0,0,.07);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --chrome:#41464d; --chrome-deep:#33373d; --chrome-raised:#4d535a; --line:#25282c;
+    --text:#dde1e5; --text-dim:#99a1a9; --sel:#f0b44c; --sel-ink:#22180a; --sel2:#f5f7fa; --key:#e3574d;
+    --vp-top:#6c7783; --vp-bot:#353b42; --field:#2b2f34; --tl-bg:#2e3237; --tl-tick:#8a929a;
+    --graph-bg:#2a2e33; --graph-grid:rgba(255,255,255,.06); --hover:rgba(255,255,255,.06);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --chrome:#41464d; --chrome-deep:#33373d; --chrome-raised:#4d535a; --line:#25282c;
+  --text:#dde1e5; --text-dim:#99a1a9; --sel:#f0b44c; --sel-ink:#22180a; --sel2:#f5f7fa; --key:#e3574d;
+  --vp-top:#6c7783; --vp-bot:#353b42; --field:#2b2f34; --tl-bg:#2e3237; --tl-tick:#8a929a;
+  --graph-bg:#2a2e33; --graph-grid:rgba(255,255,255,.06); --hover:rgba(255,255,255,.06);
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--chrome-deep)}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;background:var(--chrome-deep);color:var(--text);
+  font:13px/1.35 "Barlow","Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;overflow:hidden;user-select:none;-webkit-user-select:none}
+button,input,select,textarea{font:inherit;color:inherit}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:2px solid var(--sel);outline-offset:1px}
+[hidden]{display:none!important}
+
+#app{height:100%;display:grid;
+  grid-template-columns:46px minmax(0,1fr) 290px;
+  grid-template-rows:30px 50px minmax(0,1fr) 78px 24px;
+  grid-template-areas:"menu menu menu" "shelf shelf shelf" "tools center side" "time time time" "help help help";
+  gap:1px;background:var(--line)}
+
+.menubar{grid-area:menu;display:flex;align-items:center;gap:2px;padding:0 8px;background:var(--chrome-deep)}
+.brand{font-weight:600;margin-right:12px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.brand i{display:inline-block;width:12px;height:12px;border-radius:2px;background:linear-gradient(135deg,var(--sel),var(--key))}
+.brand small{font-weight:400;color:var(--text-dim)}
+.menu{position:relative}
+.menu summary{list-style:none;padding:3px 9px;border-radius:3px;cursor:default}
+.menu summary::-webkit-details-marker{display:none}
+.menu summary:hover,.menu[open] summary{background:var(--hover)}
+.dd{position:absolute;top:calc(100% + 3px);left:0;z-index:50;min-width:220px;padding:4px;
+  background:var(--chrome-raised);border:1px solid var(--line);border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.dd button{display:flex;justify-content:space-between;gap:16px;width:100%;padding:5px 9px;border:0;border-radius:3px;background:none;text-align:left}
+.dd button:hover{background:var(--sel);color:var(--sel-ink)}
+.dd kbd{font:inherit;color:var(--text-dim)}
+.dd button:hover kbd{color:inherit}
+.dd hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+.srv{display:none!important}
+body.has-server .srv{display:flex!important}
+body.has-server hr.srv{display:block!important}
+.menubar .spacer{flex:1}
+.status{color:var(--text-dim);font-size:12px;margin-right:8px;white-space:nowrap}
+#panelsBtn{display:none}
+
+.shelf{grid-area:shelf;display:flex;align-items:stretch;gap:2px;padding:4px 8px;background:var(--chrome);overflow-x:auto}
+.shelf .grp{display:flex;gap:2px;padding-right:8px;margin-right:6px;border-right:1px solid var(--line)}
+.shelf .grp:last-child{border-right:0}
+.sbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:52px;padding:2px 4px;
+  border:1px solid transparent;border-radius:3px;background:none;font-size:11px;color:var(--text);white-space:nowrap}
+.sbtn:hover{background:var(--hover);border-color:var(--line)}
+.sbtn svg.i{width:20px;height:20px}
+
+.tools{grid-area:tools;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;background:var(--chrome)}
+.tbtn{width:34px;height:34px;display:grid;place-items:center;border:1px solid transparent;border-radius:3px;background:none;color:var(--text)}
+.tbtn:hover{background:var(--hover);border-color:var(--line)}
+.tbtn.on{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.tools hr{width:26px;border:0;border-top:1px solid var(--line);margin:4px 0}
+
+.center{grid-area:center;display:flex;flex-direction:column;min-height:0;min-width:0;gap:1px;background:var(--line)}
+.view{flex:1;min-height:0;position:relative;overflow:hidden;background:linear-gradient(180deg,var(--vp-top),var(--vp-bot))}
+.view canvas{display:block;touch-action:none}
+.vbar{position:absolute;top:6px;left:6px;right:6px;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.seg{display:flex;pointer-events:auto;background:rgba(20,23,27,.35);border-radius:4px;padding:2px;backdrop-filter:blur(4px)}
+.seg button{border:0;background:none;color:#e9edf1;padding:3px 9px;border-radius:3px;font-size:12px}
+.seg button:hover{background:rgba(255,255,255,.12)}
+.seg button.on{background:var(--sel);color:var(--sel-ink)}
+.camname{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:#eef1f4;opacity:.8;font-size:12px;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.hud{position:absolute;bottom:8px;right:10px;color:#eef1f4;font-size:12px;opacity:.85;pointer-events:none;text-align:right;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.toast{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);background:rgba(20,23,27,.8);color:#fff;padding:5px 12px;border-radius:4px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* graph editor */
+.graph{flex:0 0 42%;min-height:160px;display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:32px minmax(0,1fr);background:var(--chrome)}
+.gbar{grid-column:1/3;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
+.gbar b{font-weight:600;margin-right:6px}
+.gbar .b{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:3px;background:var(--chrome-raised)}
+.gbar .b.on{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.gbar label{display:flex;align-items:center;gap:4px;color:var(--text-dim)}
+.gbar input{width:62px}
+.gbar .sep{width:1px;height:18px;background:var(--line);margin:0 4px}
+.gchan{overflow:auto;border-right:1px solid var(--line);background:var(--field);padding:4px 0}
+.gch{display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:default}
+.gch:hover{background:var(--hover)}
+.gch i{width:16px;height:0;border-top:2px solid currentColor;flex:none}
+.gch i.d{border-top-style:dashed}.gch i.t{border-top-style:dotted}
+.gch span{flex:1}
+.gch.off{opacity:.4}
+#gcv{width:100%;height:100%;display:block;background:var(--graph-bg);touch-action:none}
+
+/* side */
+.side{grid-area:side;display:flex;flex-direction:column;min-height:0;background:var(--chrome)}
+.phead{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;font-weight:600;background:var(--chrome-deep);border-bottom:1px solid var(--line)}
+.phead span{font-weight:400;color:var(--text-dim);font-size:12px}
+.outliner{flex:0 0 40%;overflow:auto;padding:3px 0;background:var(--field)}
+.row{display:flex;align-items:center;gap:7px;padding:3px 8px 3px 10px;cursor:default}
+.row:hover{background:var(--hover)}
+.row.sel2{background:color-mix(in srgb,var(--sel) 30%,transparent)}
+.row.sel{background:var(--sel);color:var(--sel-ink)}
+.row.drop{outline:2px dashed var(--sel);outline-offset:-2px}
+.row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row svg.i{width:15px;height:15px}
+.row.hidden .nm,.row.hidden .ico{opacity:.45}
+.row .anim{width:6px;height:6px;border-radius:1px;background:var(--key);transform:rotate(45deg)}
+.row .tw{width:8px;flex:none;color:var(--text-dim)}
+.eye{border:0;background:none;padding:2px;border-radius:3px;display:grid;place-items:center;opacity:.7;color:inherit}
+.eye:hover{opacity:1;background:var(--hover)}
+.empty{padding:14px 12px;color:var(--text-dim)}
+.outliner.dropzone{outline:2px dashed var(--sel);outline-offset:-3px}
+.ae{flex:1;overflow:auto;padding:8px 10px 14px}
+.ae-sec{margin-bottom:12px}
+.ae-sec h4{margin:0 0 6px;font-size:12px;font-weight:600;color:var(--text-dim)}
+.f{display:grid;grid-template-columns:66px 1fr;align-items:center;gap:6px;margin-bottom:5px}
+.f>span{color:var(--text-dim)}
+.trs{display:grid;grid-template-columns:66px repeat(3,minmax(0,1fr));gap:4px;align-items:center;margin-bottom:5px}
+.trs>span{color:var(--text-dim);cursor:ew-resize}
+.ax{display:flex;align-items:center;gap:3px;min-width:0}
+.ax b{font-weight:600;font-size:11px;width:9px;cursor:ew-resize}
+.ax b.x{color:#e2574c}.ax b.y{color:#6bbf59}.ax b.z{color:#4f8fe6}
+input[type=text],input[type=number]{width:100%;min-width:0;height:24px;padding:0 5px;border:1px solid var(--line);border-radius:3px;background:var(--field);user-select:text;-webkit-user-select:text}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input.keyed{background:#c6463e;color:#fff;border-color:#9b2f29}
+input.animated{background:#e8a29d;color:#2a0f0d;border-color:#c6463e}
+input[type=color]{width:100%;height:24px;padding:1px;border:1px solid var(--line);border-radius:3px;background:var(--field)}
+.rng{display:flex;gap:6px;align-items:center}
+.rng input[type=range]{flex:1;accent-color:var(--sel)}
+.rng output{width:34px;text-align:right;color:var(--text-dim)}
+.hint{color:var(--text-dim);font-size:12px;margin-top:4px}
+.parentline{color:var(--text-dim);font-size:12px;margin:-2px 0 8px 72px}
+
+.timeline{grid-area:time;display:grid;grid-template-rows:minmax(0,1fr) 34px;background:var(--chrome)}
+#tl{width:100%;height:100%;display:block;touch-action:none;cursor:ew-resize}
+.tctl{display:flex;align-items:center;gap:4px;padding:0 8px;overflow-x:auto;border-top:1px solid var(--line)}
+.tctl .b{height:26px;min-width:28px;display:grid;place-items:center;padding:0 6px;border:1px solid var(--line);border-radius:3px;background:var(--chrome-raised);color:var(--text);white-space:nowrap}
+.tctl .b:hover{filter:brightness(1.08)}
+.tctl .b.on{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.tctl .b.keyb{background:var(--key);color:#fff;border-color:#9b2f29}
+.tctl svg.i{width:15px;height:15px}
+.tctl label{display:flex;align-items:center;gap:4px;color:var(--text-dim);white-space:nowrap}
+.tctl input[type=number]{width:52px}
+.tctl select{height:26px;border:1px solid var(--line);border-radius:3px;background:var(--field)}
+.tctl .sep{width:1px;align-self:stretch;margin:5px 4px;background:var(--line);flex:none}
+
+.help{grid-area:help;display:flex;align-items:center;padding:0 10px;background:var(--chrome-deep);color:var(--text-dim);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+dialog{border:1px solid var(--line);border-radius:6px;background:var(--chrome);color:var(--text);padding:0;width:min(600px,94vw);box-shadow:0 18px 50px rgba(0,0,0,.45)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg-h{padding:10px 14px;font-weight:600;background:var(--chrome-deep);border-bottom:1px solid var(--line)}
+.dlg-b{padding:12px 14px;max-height:70vh;overflow:auto}
+.dlg-b textarea{width:100%;height:260px;resize:vertical;border:1px solid var(--line);border-radius:4px;background:var(--field);padding:8px;font-size:12px;user-select:text;-webkit-user-select:text}
+.dlg-f{display:flex;justify-content:flex-end;gap:8px;padding:0 14px 12px;align-items:center}
+.dlg-f .msg{flex:1;color:var(--text-dim);font-size:12px}
+#dlgBtns{display:flex;gap:8px}
+.btn{height:28px;padding:0 12px;border:1px solid var(--line);border-radius:3px;background:var(--chrome-raised)}
+.btn.primary{background:var(--sel);color:var(--sel-ink);border-color:var(--sel)}
+.btn:disabled{opacity:.5}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:0}
+.keys dt{font-weight:600}
+.keys dd{margin:0;color:var(--text-dim)}
+.form{display:grid;grid-template-columns:110px 1fr;gap:8px 10px;align-items:center;margin-bottom:12px}
+.form>span{color:var(--text-dim)}
+.form .pair{display:flex;gap:6px;align-items:center}
+.form .pair input[type=number]{width:90px}
+.preview{display:grid;place-items:center;min-height:120px;border:1px solid var(--line);border-radius:4px;background:var(--field);overflow:hidden}
+.preview img,.preview video{max-width:100%;max-height:44vh;display:block}
+.preview .ph{color:var(--text-dim);padding:20px;text-align:center}
+.prog{height:4px;background:var(--field);border-radius:2px;overflow:hidden;margin-top:8px}
+.prog i{display:block;height:100%;width:0;background:var(--sel)}
+.lib{display:flex;flex-direction:column;gap:2px;margin-top:10px;max-height:40vh;overflow:auto}
+.lib .it{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:3px;background:var(--field)}
+.lib .it span{flex:1}
+.lib .it small{color:var(--text-dim)}
+
+@media (max-width:760px){
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:30px 50px 42px minmax(0,1fr) 78px;
+    grid-template-areas:"menu" "shelf" "tools" "center" "time"}
+  .tools{flex-direction:row;justify-content:flex-start;padding:0 6px;overflow-x:auto}
+  .tools hr{width:1px;height:24px;border:0;border-left:1px solid var(--line);margin:0 4px}
+  .help,.status{display:none}
+  .graph{grid-template-columns:96px minmax(0,1fr)}
+  .side{position:fixed;z-index:40;right:0;top:calc(env(safe-area-inset-top,0px) + 30px);bottom:env(safe-area-inset-bottom,0px);width:min(320px,88vw);
+    transform:translateX(100%);transition:transform .2s;box-shadow:-10px 0 30px rgba(0,0,0,.35)}
+  .side.open{transform:none}
+  #panelsBtn{display:block}
+  .brand span,.brand small{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="menubar">
+    <div class="brand"><i></i><span>Mini Maya Studio</span><small id="verTag"></small></div>
+    <details class="menu"><summary>File</summary><div class="dd">
+      <button data-cmd="new">New scene</button>
+      <hr class="srv">
+      <button class="srv" data-cmd="studioSave">Save to studio <kbd>Ctrl S</kbd></button>
+      <button class="srv" data-cmd="studioSaveAs">Save to studio as…</button>
+      <button class="srv" data-cmd="studioOpen">Open from studio…</button>
+      <hr>
+      <button data-cmd="export">Scene as JSON text…</button>
+      <button data-cmd="import">Load scene from JSON…</button>
+      <button data-cmd="saveJson">Download scene (.json)</button>
+      <hr>
+      <button data-cmd="exportGlb">Export GLB with animation</button>
+      <button data-cmd="exportObj">Export OBJ (current frame)</button>
+    </div></details>
+    <details class="menu"><summary>Edit</summary><div class="dd">
+      <button data-cmd="undo">Undo <kbd>Ctrl Z</kbd></button>
+      <button data-cmd="redo">Redo <kbd>Ctrl Shift Z</kbd></button>
+      <hr>
+      <button data-cmd="dup">Duplicate <kbd>Ctrl D</kbd></button>
+      <button data-cmd="del">Delete <kbd>Del</kbd></button>
+      <hr>
+      <button data-cmd="group">Group <kbd>Ctrl G</kbd></button>
+      <button data-cmd="parent">Parent to last selected <kbd>P</kbd></button>
+      <button data-cmd="unparent">Unparent <kbd>Shift P</kbd></button>
+    </div></details>
+    <details class="menu"><summary>Create</summary><div class="dd" id="createMenu"></div></details>
+    <details class="menu"><summary>Display</summary><div class="dd">
+      <button data-cmd="shaded">Shaded <kbd>5</kbd></button>
+      <button data-cmd="wire">Wireframe <kbd>4</kbd></button>
+      <button data-cmd="grid">Toggle grid</button>
+      <hr>
+      <button data-cmd="frameSel">Frame selected <kbd>F</kbd></button>
+      <button data-cmd="frameAll">Frame all <kbd>A</kbd></button>
+      <hr>
+      <button data-cmd="theme">Switch light / dark</button>
+    </div></details>
+    <details class="menu"><summary>Windows</summary><div class="dd">
+      <button data-cmd="graph">Graph Editor <kbd>G</kbd></button>
+      <button data-cmd="render">Render &amp; playblast…</button>
+    </div></details>
+    <details class="menu"><summary>Help</summary><div class="dd">
+      <button data-cmd="shortcuts">Keyboard shortcuts <kbd>?</kbd></button>
+      <button data-cmd="about">About this build</button>
+    </div></details>
+    <div class="spacer"></div>
+    <span class="status" id="status"></span>
+    <button class="btn" id="panelsBtn" data-cmd="panels">Panels</button>
+  </header>
+
+  <nav class="shelf" id="shelf" aria-label="Shelf"></nav>
+
+  <aside class="tools" aria-label="Tools">
+    <button class="tbtn" data-cmd="tool" data-arg="select" title="Select (Q)" data-help="Select tool (Q): click objects without showing a manipulator. Shift-click adds to the selection."><svg class="i" viewBox="0 0 24 24"><path d="M6 3l13 8-6 1.6L10 19z"/></svg></button>
+    <button class="tbtn" data-cmd="tool" data-arg="move" title="Move (W)" data-help="Move tool (W): drag an arrow to move along one axis, a square for two. Moves every selected object."><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></button>
+    <button class="tbtn" data-cmd="tool" data-arg="rotate" title="Rotate (E)" data-help="Rotate tool (E): drag a ring to rotate around that axis."><svg class="i" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></button>
+    <button class="tbtn" data-cmd="tool" data-arg="scale" title="Scale (R)" data-help="Scale tool (R): drag a cube handle to scale along an axis, the center for uniform."><svg class="i" viewBox="0 0 24 24"><rect x="4" y="10" width="10" height="10"/><path d="M14 10l6-6M15 4h5v5"/></svg></button>
+    <hr>
+    <button class="tbtn" id="snapBtn" data-cmd="snap" title="Snap (X)" data-help="Snap (X): move in 0.5 steps, rotate in 15° steps, scale in 0.25 steps."><svg class="i" viewBox="0 0 24 24"><path d="M6 4v8a6 6 0 0 0 12 0V4h-4v8a2 2 0 0 1-4 0V4z"/><path d="M6 8h4M14 8h4"/></svg></button>
+    <button class="tbtn" data-cmd="frameSel" title="Frame selected (F)" data-help="Frame selected (F): zoom the camera to fit the selection."><svg class="i" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="2.5"/></svg></button>
+    <button class="tbtn" id="graphBtn" data-cmd="graph" title="Graph Editor (G)" data-help="Graph Editor (G): see and edit animation curves for the selected object."><svg class="i" viewBox="0 0 24 24"><path d="M3 20h18M3 20V4"/><path d="M5 17c4 0 4-10 8-10s4 6 7 6"/><circle cx="13" cy="7" r="1.4"/></svg></button>
+    <button class="tbtn" data-cmd="render" title="Render" data-help="Render: make a clean still of this frame or a playblast video of the frame range."><svg class="i" viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="12" rx="1.5"/><path d="M17 10l4-2v8l-4-2"/></svg></button>
+  </aside>
+
+  <div class="center">
+    <main class="view" id="view" data-help="Drag to orbit, right-drag to pan, scroll to zoom. Click to select, Shift-click to add.">
+      <div class="vbar">
+        <div class="seg" id="viewSeg">
+          <button data-cmd="view" data-arg="persp" class="on">Persp</button>
+          <button data-cmd="view" data-arg="top">Top</button>
+          <button data-cmd="view" data-arg="front">Front</button>
+          <button data-cmd="view" data-arg="side">Side</button>
+        </div>
+        <div class="seg" id="shadeSeg">
+          <button data-cmd="shaded" class="on">Shaded</button>
+          <button data-cmd="wire">Wire</button>
+        </div>
+      </div>
+      <div class="hud" id="hud"></div>
+      <div class="camname" id="camName">persp</div>
+      <div class="toast" id="toast"></div>
+    </main>
+    <section class="graph" id="graph" hidden aria-label="Graph Editor">
+      <div class="gbar">
+        <b>Graph Editor</b>
+        <button class="b" data-cmd="gfit" title="Fit curves (double-click the graph)">Fit</button>
+        <span class="sep"></span>
+        <span style="color:var(--text-dim)">Curve</span>
+        <button class="b" data-cmd="interp" data-arg="spline">Spline</button>
+        <button class="b" data-cmd="interp" data-arg="linear">Linear</button>
+        <button class="b" data-cmd="interp" data-arg="step">Stepped</button>
+        <span class="sep"></span>
+        <label>Key frame <input type="number" id="gkFrame" step="1"></label>
+        <label>Value <input type="number" id="gkVal" step="0.1"></label>
+      </div>
+      <div class="gchan" id="gchan"></div>
+      <canvas id="gcv" data-help="Graph Editor: drag a key up or down to change its value, sideways to change its frame. Scroll to zoom, right-drag to pan, double-click to fit."></canvas>
+    </section>
+  </div>
+
+  <aside class="side" id="side">
+    <div class="phead">Outliner <span id="objCount"></span></div>
+    <div class="outliner" id="outliner" role="listbox" aria-multiselectable="true" aria-label="Scene objects"
+         data-help="Outliner: Shift-click to multi-select. Drag a row onto another to parent it, or onto empty space to unparent."></div>
+    <div class="phead">Attribute Editor</div>
+    <div class="ae" id="ae">
+      <div class="empty" id="aeEmpty">Select an object to edit its attributes.</div>
+      <div id="aeBody" hidden>
+        <div class="ae-sec">
+          <label class="f"><span>Name</span><input type="text" id="fName" spellcheck="false" autocomplete="off"></label>
+          <div class="parentline" id="parentLine"></div>
+        </div>
+        <div class="ae-sec" id="trsSec">
+          <h4>Transform (relative to parent)</h4>
+          <div id="trsRows"></div>
+          <div class="hint">Drag a label sideways to scrub its value, with Shift for fine steps. Red fields are keyed on this frame.</div>
+        </div>
+        <div class="ae-sec" id="matSec">
+          <h4>Material</h4>
+          <label class="f"><span>Color</span><input type="color" id="fColor"></label>
+          <div class="f"><span>Roughness</span><div class="rng"><input type="range" id="fRough" min="0" max="1" step="0.01"><output id="oRough"></output></div></div>
+          <div class="f"><span>Metalness</span><div class="rng"><input type="range" id="fMetal" min="0" max="1" step="0.01"><output id="oMetal"></output></div></div>
+        </div>
+        <div class="ae-sec" id="lightSec">
+          <h4>Light</h4>
+          <label class="f"><span>Color</span><input type="color" id="fLColor"></label>
+          <div class="f"><span>Intensity</span><div class="rng"><input type="range" id="fInt" min="0" max="4" step="0.05"><output id="oInt"></output></div></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <section class="timeline" aria-label="Timeline">
+    <canvas id="tl" data-help="Time slider: click or drag to change frame. Red marks are keys on the selected object."></canvas>
+    <div class="tctl">
+      <button class="b" data-cmd="first" title="Go to start"><svg class="i" viewBox="0 0 24 24"><path d="M6 5v14M18 5L8 12l10 7z"/></svg></button>
+      <button class="b" data-cmd="prevKey" title="Previous key"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/><path d="M5 9l3 3-3 3-3-3z"/></svg></button>
+      <button class="b" data-cmd="prevFrame" title="Previous frame (,)"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <button class="b" id="playBtn" data-cmd="play" title="Play / pause (Space)"><svg class="i" viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg></button>
+      <button class="b" data-cmd="nextFrame" title="Next frame (.)"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button class="b" data-cmd="nextKey" title="Next key"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/><path d="M19 9l3 3-3 3-3-3z"/></svg></button>
+      <button class="b" data-cmd="last" title="Go to end"><svg class="i" viewBox="0 0 24 24"><path d="M18 5v14M6 5l10 7-10 7z"/></svg></button>
+      <span class="sep"></span>
+      <label>Frame <input type="number" id="fFrame" step="1"></label>
+      <label>Start <input type="number" id="fStart" step="1"></label>
+      <label>End <input type="number" id="fEnd" step="1"></label>
+      <select id="fFps" title="Playback rate"><option value="12">12 fps</option><option value="24" selected>24 fps</option><option value="30">30 fps</option><option value="60">60 fps</option></select>
+      <span class="sep"></span>
+      <button class="b keyb" data-cmd="key" title="Set key (S)" data-help="Set key (S): record position, rotation and scale of every selected object at this frame.">Set key</button>
+      <button class="b" data-cmd="unkey" title="Delete key at this frame">Delete key</button>
+      <button class="b on" id="autoBtn" data-cmd="auto" title="Auto key" data-help="Auto key: when on, moving an already animated object keys it automatically.">Auto key</button>
+      <button class="b" id="graphBtn2" data-cmd="graph" title="Graph Editor (G)">Graph</button>
+    </div>
+  </section>
+
+  <footer class="help" id="help"></footer>
+</div>
+
+<dialog id="dlg">
+  <div class="dlg-h" id="dlgTitle"></div>
+  <div class="dlg-b" id="dlgBody"></div>
+  <div class="dlg-f"><span class="msg" id="dlgMsg"></span><div id="dlgBtns"></div></div>
+</dialog>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="vendor/TransformControls.js"></script>
+<script src="vendor/GLTFExporter.js"></script>
+<script src="vendor/OBJExporter.js"></script>
+<script>
+(function(){
+'use strict';
+const APP_VERSION = '0.2.0';
+const BUILD_ID = '20261001-182505-bd1b';
+const $ = s => document.querySelector(s);
+const DEG = Math.PI/180;
+
+try{ const t = localStorage.getItem('miniMaya.theme'); if(t) document.documentElement.dataset.theme = t; }catch(e){}
+$('#verTag').textContent = APP_VERSION.startsWith('__') ? '' : 'v' + APP_VERSION;
+
+/* ---------- icons & types ---------- */
+const ICONS = {
+  cube:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/>',
+  sphere:'<circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="8" ry="3"/>',
+  cylinder:'<ellipse cx="12" cy="6" rx="7" ry="2.5"/><path d="M5 6v12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6"/>',
+  cone:'<path d="M12 3L5 18c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5z"/>',
+  torus:'<ellipse cx="12" cy="12" rx="9.5" ry="6.5"/><ellipse cx="12" cy="12" rx="3.5" ry="2"/><path d="M2.5 12c0 2 1 3.5 2 4.3M21.5 12c0 2-1 3.5-2 4.3"/>',
+  plane:'<path d="M2 16l6-7h14l-6 7z"/>',
+  light:'<circle cx="12" cy="11" r="4"/><path d="M12 3v2M12 17v2M4 11h2M18 11h2M6.3 5.3l1.4 1.4M16.3 15.3l1.4 1.4M6.3 16.7l1.4-1.4M16.3 6.7l1.4-1.4M10 21h4"/>',
+  group:'<path d="M3 7h7l2 2h9v10H3z"/>'
+};
+const svg = (p, cls='i') => `<svg class="${cls}" viewBox="0 0 24 24">${p}</svg>`;
+const EYE = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
+const EYE_OFF = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><path d="M4 4l16 16"/>';
+const PLAY = '<path d="M7 5l12 7-12 7z"/>', PAUSE = '<path d="M8 5v14M16 5v14"/>';
+
+const TYPES = {
+  cube:    {label:'Cube',     prefix:'pCube',     geo:()=>new THREE.BoxGeometry(1,1,1), y:.5},
+  sphere:  {label:'Sphere',   prefix:'pSphere',   geo:()=>new THREE.SphereGeometry(.5,48,24), y:.5},
+  cylinder:{label:'Cylinder', prefix:'pCylinder', geo:()=>new THREE.CylinderGeometry(.5,.5,1,40), y:.5},
+  cone:    {label:'Cone',     prefix:'pCone',     geo:()=>new THREE.ConeGeometry(.5,1,40), y:.5},
+  torus:   {label:'Torus',    prefix:'pTorus',    geo:()=>new THREE.TorusGeometry(.5,.18,20,64), y:.68},
+  plane:   {label:'Plane',    prefix:'pPlane',    geo:()=>{const g=new THREE.PlaneGeometry(2,2); g.rotateX(-Math.PI/2); return g;}, y:.002},
+  light:   {label:'Point light', prefix:'pointLight', geo:null, y:3},
+  group:   {label:'Group', prefix:'group', geo:null, y:0, hidden:true}
+};
+
+const shelf = $('#shelf'), createMenu = $('#createMenu');
+const g1 = document.createElement('div'); g1.className='grp';
+const g2 = document.createElement('div'); g2.className='grp';
+for(const [k,t] of Object.entries(TYPES)){
+  if(t.hidden) continue;
+  const b = document.createElement('button');
+  b.className='sbtn'; b.dataset.cmd='create'; b.dataset.arg=k;
+  b.title = 'Create ' + t.label.toLowerCase();
+  b.dataset.help = k==='light' ? 'Add a point light that casts colored light into the scene.' : `Add a ${t.label.toLowerCase()} at the origin.`;
+  b.innerHTML = svg(ICONS[k]) + `<span>${k==='light'?'Light':t.label}</span>`;
+  (k==='light'?g2:g1).appendChild(b);
+  const m = document.createElement('button'); m.dataset.cmd='create'; m.dataset.arg=k; m.textContent=t.label;
+  createMenu.appendChild(m);
+}
+const gb = document.createElement('button'); gb.className='sbtn'; gb.dataset.cmd='group'; gb.title='Group selection (Ctrl G)';
+gb.dataset.help='Group (Ctrl G): put the selected objects under a new group you can move and animate as one.';
+gb.innerHTML = svg(ICONS.group) + '<span>Group</span>'; g2.appendChild(gb);
+shelf.append(g1,g2);
+
+/* ---------- three setup ---------- */
+const viewEl = $('#view');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+renderer.setClearColor(0x000000, 0);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.autoClear = false;
+viewEl.prepend(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
+camera.position.set(7, 5.5, 9);
+const orbit = new THREE.OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true; orbit.dampingFactor = 0.14;
+orbit.target.set(0, .6, 0); orbit.update();
+
+scene.add(new THREE.HemisphereLight(0xdfe8f2, 0x3a3530, 0.6));
+const keyLight = new THREE.DirectionalLight(0xffffff, 0.95);
+keyLight.position.set(6, 10, 5); keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+Object.assign(keyLight.shadow.camera, {left:-12, right:12, top:12, bottom:-12, near:1, far:40});
+keyLight.shadow.bias = -0.0006;
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xa9bcff, 0.3); fillLight.position.set(-6,4,-5); scene.add(fillLight);
+
+const grid = new THREE.GridHelper(20, 20, 0x23272c, 0x4c545c);
+grid.material.transparent = true; grid.material.opacity = .85;
+scene.add(grid);
+const catcher = new THREE.Mesh(new THREE.PlaneGeometry(40,40), new THREE.ShadowMaterial({opacity:.22}));
+catcher.rotation.x = -Math.PI/2; catcher.receiveShadow = true; catcher.position.y = -0.001;
+scene.add(catcher);
+
+const tc = new THREE.TransformControls(camera, renderer.domElement);
+tc.setSize(0.9);
+scene.add(tc);
+let gizmoUsed = false, dragStart = null;
+tc.addEventListener('dragging-changed', e => {
+  orbit.enabled = !e.value;
+  if(e.value){ gizmoUsed = true; if(playing) togglePlay(); beginMultiDrag(); }
+  else { dragStart = null; onTransformEnd(); }
+});
+tc.addEventListener('objectChange', () => { applyMultiDrag(); refreshAttrs(true); });
+
+/* axis triad */
+const axScene = new THREE.Scene();
+const axCam = new THREE.OrthographicCamera(-1.6,1.6,1.6,-1.6,0.1,10);
+function axisLabel(txt, color){
+  const c = document.createElement('canvas'); c.width=c.height=64;
+  const x = c.getContext('2d'); x.fillStyle=color; x.font='600 44px Barlow, sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(txt,32,34);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c), depthTest:false}));
+  s.scale.set(.55,.55,1); return s;
+}
+[['X',0xe2574c,'#e2574c',[1,0,0]],['Y',0x6bbf59,'#6bbf59',[0,1,0]],['Z',0x4f8fe6,'#4f8fe6',[0,0,1]]].forEach(([n,hex,css_,d])=>{
+  const v = new THREE.Vector3(...d);
+  axScene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), v]), new THREE.LineBasicMaterial({color:hex})));
+  const l = axisLabel(n, css_); l.position.copy(v.clone().multiplyScalar(1.3)); axScene.add(l);
+});
+
+/* ---------- state ---------- */
+let objects = [], sel = [], nextId = 1;
+let tool = 'move', snap = false, wire = false, autoKey = true;
+let frame = 1, start = 1, end = 120, fps = 24, playing = false;
+let history = [], redoStack = [];
+let overlays = [];
+let studioName = null;
+const selMat = new THREE.MeshBasicMaterial({color:0xf0b44c, wireframe:true, transparent:true, opacity:.55});
+const selMat2 = new THREE.MeshBasicMaterial({color:0xf5f7fa, wireframe:true, transparent:true, opacity:.35});
+const primary = () => sel.length ? sel[sel.length-1] : null;
+const byId = id => objects.find(o => o.id === id);
+const objOf = new WeakMap();
+
+function setMatColor(mat, hex){ mat.color.set(hex).convertSRGBToLinear(); }
+
+function locatorMesh(){
+  const g = new THREE.Group();
+  const pts = [[-.3,0,0],[.3,0,0],[0,-.3,0],[0,.3,0],[0,0,-.3],[0,0,.3]].map(p=>new THREE.Vector3(...p));
+  const l = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:0xe9edf1, transparent:true, opacity:.7}));
+  l.userData.helper = true; l.raycast = () => {};
+  g.add(l); return g;
+}
+function makeObject(d){
+  let mesh;
+  if(d.type === 'light'){
+    const mat = new THREE.MeshBasicMaterial(); setMatColor(mat, d.color);
+    mesh = new THREE.Mesh(new THREE.SphereGeometry(.13, 20, 10), mat);
+    const pl = new THREE.PointLight(0xffffff, d.intensity ?? 1.2, 0, 2);
+    setMatColor(pl, d.color);
+    mesh.add(pl); mesh.userData.isLight = true;
+  } else if(d.type === 'group'){
+    mesh = locatorMesh();
+  } else {
+    const mat = new THREE.MeshStandardMaterial({roughness:d.rough ?? .55, metalness:d.metal ?? 0, wireframe:wire});
+    setMatColor(mat, d.color);
+    mesh = new THREE.Mesh(TYPES[d.type].geo(), mat);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+  }
+  mesh.name = d.name;
+  mesh.position.fromArray(d.p); mesh.rotation.set(d.r[0], d.r[1], d.r[2]); mesh.scale.fromArray(d.s);
+  mesh.visible = d.visible !== false;
+  const o = {id:d.id, name:d.name, type:d.type, color:d.color || '#bfc4cb', rough:d.rough ?? .55, metal:d.metal ?? 0,
+             intensity:d.intensity ?? 1.2, interp:d.interp || 'spline', parent:null, mesh, light: mesh.children.find(c => c.isPointLight) || null,
+             keys: d.keys ? JSON.parse(JSON.stringify(d.keys)) : {}};
+  objOf.set(mesh, o);
+  scene.add(mesh); objects.push(o);
+  return o;
+}
+function linkParent(o, pid){
+  const p = pid != null ? byId(pid) : null;
+  o.parent = p ? p.id : null;
+  (p ? p.mesh : scene).add(o.mesh);
+}
+const children = o => objects.filter(c => c.parent === o.id);
+function descendants(o){ const out = []; const walk = x => children(x).forEach(c => { out.push(c); walk(c); }); walk(o); return out; }
+function isAncestor(a, o){ let p = o.parent != null ? byId(o.parent) : null; while(p){ if(p === a) return true; p = p.parent != null ? byId(p.parent) : null; } return false; }
+const topSelected = () => sel.filter(o => !sel.some(a => a !== o && isAncestor(a, o)));
+
+function disposeMesh(m){
+  m.traverse(n => { if(n.geometry && !n.userData.sharedGeo) n.geometry.dispose(); if(n.material && n.material !== selMat && n.material !== selMat2 && n.material.dispose) n.material.dispose(); });
+}
+function removeObjects(list){
+  clearOverlays();
+  const set = new Set(list);
+  sel = sel.filter(o => !set.has(o));
+  for(const o of list){ o.mesh.parent && o.mesh.parent.remove(o.mesh); }
+  for(const o of list) disposeMesh(o.mesh);
+  objects = objects.filter(o => !set.has(o));
+}
+function uniqueName(prefix){
+  let n = 1; const names = new Set(objects.map(o=>o.name));
+  while(names.has(prefix + n)) n++;
+  return prefix + n;
+}
+const trs = m => ({p:m.position.toArray(), r:[m.rotation.x, m.rotation.y, m.rotation.z], s:m.scale.toArray()});
+
+/* ---------- serialization / history ---------- */
+function objData(o){
+  return {id:o.id, name:o.name, type:o.type, parent:o.parent, color:o.color, rough:o.rough, metal:o.metal,
+          intensity:o.intensity, interp:o.interp, visible:o.mesh.visible, ...trs(o.mesh), keys:o.keys};
+}
+function snapshot(){ return {app:'minimaya', v:2, nextId, frame, start, end, fps, objects: objects.map(objData)}; }
+const serialize = () => JSON.stringify(snapshot());
+function persist(s){ try{ localStorage.setItem('miniMaya.scene', s); }catch(e){} }
+function commit(){
+  const s = serialize();
+  if(history[history.length-1] === s) return;
+  history.push(s); if(history.length > 100) history.shift();
+  redoStack = []; persist(s); setDirty(true);
+}
+function buildFrom(list){
+  const made = list.map(od => makeObject({...od, p:od.p||[0,0,0], r:od.r||[0,0,0], s:od.s||[1,1,1]}));
+  made.forEach((o,i) => { if(list[i].parent != null) linkParent(o, list[i].parent); });
+  return made;
+}
+function restore(s){
+  const d = typeof s === 'string' ? JSON.parse(s) : s;
+  if(!d || !Array.isArray(d.objects)) throw new Error('This text is not a Mini Maya scene.');
+  const selIds = sel.map(o => o.id);
+  removeObjects(objects.slice());
+  buildFrom(d.objects.filter(od => TYPES[od.type]));
+  nextId = Math.max(d.nextId || 1, ...objects.map(o=>o.id+1), 1);
+  start = d.start ?? 1; end = d.end ?? 120; frame = d.frame ?? start; fps = d.fps ?? 24;
+  $('#fFps').value = String(fps);
+  setSelection(selIds.map(byId).filter(Boolean), true);
+  syncTime(); refreshAll();
+}
+function undo(){ if(history.length < 2) return toast('Nothing to undo'); redoStack.push(history.pop()); restore(history[history.length-1]); persist(history[history.length-1]); toast('Undo'); }
+function redo(){ if(!redoStack.length) return toast('Nothing to redo'); const s = redoStack.pop(); history.push(s); restore(s); persist(s); toast('Redo'); }
+
+/* ---------- selection ---------- */
+function clearOverlays(){
+  overlays.forEach(ov => { ov.parent && ov.parent.remove(ov); if(ov.userData.own) ov.geometry.dispose(); });
+  overlays = [];
+}
+function addOverlay(o, mat){
+  const targets = o.type === 'group' ? descendants(o).filter(d => d.type !== 'group') : [o];
+  for(const t of targets){
+    let ov;
+    if(t.type === 'light'){ ov = new THREE.Mesh(new THREE.SphereGeometry(.24,12,6), mat); ov.userData.own = true; }
+    else { ov = new THREE.Mesh(t.mesh.geometry, mat); ov.scale.setScalar(1.003); }
+    ov.raycast = () => {}; ov.userData.helper = true;
+    t.mesh.add(ov); overlays.push(ov);
+  }
+  if(o.type === 'group'){
+    const ov = new THREE.Mesh(new THREE.OctahedronGeometry(.18,0), mat); ov.userData.own = true; ov.userData.helper = true; ov.raycast = () => {};
+    o.mesh.add(ov); overlays.push(ov);
+  }
+}
+function setSelection(list, silent){
+  clearOverlays();
+  sel = list.filter(Boolean);
+  sel.forEach(o => addOverlay(o, o === primary() ? selMat : selMat2));
+  attachGizmo();
+  gNeedsFit = true; gSelKey = null;
+  if(!silent){ refreshOutliner(); refreshAttrs(); drawTimeline(); }
+}
+function select(o, additive){
+  if(!additive) return setSelection(o ? [o] : []);
+  if(!o) return;
+  if(sel.includes(o)){
+    if(o === primary()) setSelection(sel.filter(x => x !== o));
+    else setSelection([...sel.filter(x => x !== o), o]);
+  } else setSelection([...sel, o]);
+}
+function attachGizmo(){
+  const p = primary();
+  if(p && tool !== 'select' && p.mesh.visible && !(p.type === 'light' && tool !== 'move')){
+    tc.attach(p.mesh); tc.setMode(tool === 'move' ? 'translate' : tool);
+  } else tc.detach();
+}
+function setTool(t){
+  tool = t;
+  document.querySelectorAll('.tools [data-cmd="tool"]').forEach(b=>b.classList.toggle('on', b.dataset.arg===t));
+  attachGizmo();
+}
+function toggleSnap(){
+  snap = !snap;
+  tc.setTranslationSnap(snap ? .5 : null);
+  tc.setRotationSnap(snap ? 15*DEG : null);
+  tc.setScaleSnap(snap ? .25 : null);
+  $('#snapBtn').classList.toggle('on', snap);
+  toast(snap ? 'Snap on' : 'Snap off');
+}
+const worldPos = m => m.getWorldPosition(new THREE.Vector3());
+function beginMultiDrag(){
+  const p = primary(); if(!p) return;
+  const others = topSelected().filter(o => o !== p && !isAncestor(p, o));
+  dragStart = {w:worldPos(p.mesh), r:p.mesh.rotation.clone(), s:p.mesh.scale.clone(),
+    others: others.map(o => ({o, w:worldPos(o.mesh), r:o.mesh.rotation.clone(), s:o.mesh.scale.clone()}))};
+}
+function applyMultiDrag(){
+  const p = primary(); if(!dragStart || !p || !dragStart.others.length) return;
+  const dW = worldPos(p.mesh).sub(dragStart.w);
+  const pr = p.mesh.rotation, ps = p.mesh.scale, R = dragStart.r, S = dragStart.s;
+  for(const it of dragStart.others){
+    const m = it.o.mesh;
+    const target = it.w.clone().add(dW);
+    m.parent.updateMatrixWorld(); m.position.copy(m.parent.worldToLocal(target));
+    m.rotation.set(it.r.x + pr.x - R.x, it.r.y + pr.y - R.y, it.r.z + pr.z - R.z);
+    m.scale.set(it.s.x * (S.x ? ps.x/S.x : 1), it.s.y * (S.y ? ps.y/S.y : 1), it.s.z * (S.z ? ps.z/S.z : 1));
+  }
+}
+function onTransformEnd(){ autoKeyMaybe(); commit(); refreshAttrs(); drawTimeline(); refreshOutliner(); }
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let downAt = null;
+renderer.domElement.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY, e.button]; });
+renderer.domElement.addEventListener('pointerup', e => {
+  const d = downAt; downAt = null;
+  if(gizmoUsed){ gizmoUsed = false; return; }
+  if(!d || d[2] !== 0) return;
+  if((e.clientX-d[0])**2 + (e.clientY-d[1])**2 > 25) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set((e.clientX-r.left)/r.width*2-1, -(e.clientY-r.top)/r.height*2+1);
+  ray.setFromCamera(ndc, camera);
+  const pickable = objects.filter(o => o.type !== 'group' && isShown(o)).map(o => o.mesh);
+  const hits = ray.intersectObjects(pickable, false);
+  select(hits.length ? objOf.get(hits[0].object) : null, e.shiftKey || e.ctrlKey || e.metaKey);
+});
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+function isShown(o){ let m = o.mesh; while(m && m !== scene){ if(!m.visible) return false; m = m.parent; } return true; }
+
+/* ---------- edit commands ---------- */
+function create(type){
+  const t = TYPES[type], isLight = type === 'light';
+  const o = makeObject({id:nextId++, name:uniqueName(t.prefix), type,
+    color: isLight ? '#ffd9a0' : '#bfc4cb', rough:.55, metal:0, intensity:1.2,
+    p: isLight ? [2, 3, 2] : [0, t.y, 0], r:[0,0,0], s:[1,1,1]});
+  if(isLight && tool !== 'move') setTool('move');
+  setSelection([o]); commit(); refreshOutliner();
+  toast(`Created ${o.name}`);
+}
+function duplicate(){
+  const roots = topSelected();
+  if(!roots.length) return toast('Select an object to duplicate');
+  const made = [];
+  for(const root of roots){
+    const sub = [root, ...descendants(root)];
+    const map = {};
+    const data = sub.map(o => { const d = JSON.parse(JSON.stringify(objData(o))); map[o.id] = nextId++; return d; });
+    for(const d of data){
+      const isRoot = d.id === root.id;
+      d.parent = isRoot ? d.parent : map[d.parent];
+      d.id = map[d.id];
+      d.name = uniqueName(d.name.replace(/\d+$/, '') || TYPES[d.type].prefix);
+      if(isRoot){ d.p[0] += 1.2; for(const k in d.keys) d.keys[k].p[0] += 1.2; }
+      const o = makeObject(d); if(d.parent != null) linkParent(o, d.parent);
+      if(isRoot) made.push(o);
+    }
+  }
+  setSelection(made); commit(); refreshOutliner(); toast(made.length === 1 ? `Duplicated as ${made[0].name}` : `Duplicated ${made.length} objects`);
+}
+function del(){
+  const roots = topSelected(); if(!roots.length) return;
+  const all = [...new Set(roots.flatMap(o => [o, ...descendants(o)]))];
+  removeObjects(all); setSelection([]); commit(); toast(all.length === 1 ? `Deleted ${all[0].name}` : `Deleted ${all.length} objects`);
+}
+function parentCmd(){
+  if(sel.length < 2) return toast('Select the children, then Shift-select the parent last, then press P');
+  const p = primary();
+  let n = 0;
+  for(const c of topSelected()){
+    if(c === p || isAncestor(c, p)) continue;
+    reparent(c, p); n++;
+  }
+  setSelection([p]); commit(); refreshOutliner();
+  toast(n ? `Parented ${n} under ${p.name}` : 'Nothing to parent');
+}
+function reparent(c, p){
+  (p ? p.mesh : scene).attach(c.mesh);
+  c.parent = p ? p.id : null;
+  if(Object.keys(c.keys).length) toast(`${c.name} keeps its keys in its new parent's space`);
+}
+function unparentCmd(){
+  const list = sel.filter(o => o.parent != null);
+  if(!list.length) return toast('Nothing selected has a parent');
+  list.forEach(o => reparent(o, null));
+  commit(); refreshOutliner(); refreshAttrs();
+  toast(`Unparented ${list.length}`);
+}
+function groupCmd(){
+  const roots = topSelected();
+  if(!roots.length) return toast('Select objects to group');
+  const commonParent = roots.every(r => r.parent === roots[0].parent) ? roots[0].parent : null;
+  const g = makeObject({id:nextId++, name:uniqueName('group'), type:'group', p:[0,0,0], r:[0,0,0], s:[1,1,1]});
+  if(commonParent != null) linkParent(g, commonParent);
+  g.mesh.updateMatrixWorld();
+  roots.forEach(r => reparent(r, g));
+  setSelection([g]); commit(); refreshOutliner();
+  toast(`Grouped ${roots.length} into ${g.name}`);
+}
+function newScene(){
+  removeObjects(objects.slice()); setSelection([], true);
+  frame = start = 1; end = 120; studioName = null;
+  syncTime(); refreshAll(); commit();
+  toast('New scene. Undo brings the old one back.');
+}
+
+/* ---------- camera ---------- */
+let tween = null;
+function flyTo(pos, tgt){
+  tween = {t:0, fromP:camera.position.clone(), toP:pos, fromT:orbit.target.clone(), toT:tgt};
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) tween.t = 1;
+}
+function frameObjects(list){
+  const box = new THREE.Box3();
+  list.filter(isShown).forEach(o => { o.mesh.updateMatrixWorld(); box.expandByObject(o.mesh); });
+  if(box.isEmpty()) box.set(new THREE.Vector3(-1,0,-1), new THREE.Vector3(1,1,1));
+  const sph = box.getBoundingSphere(new THREE.Sphere());
+  const r = Math.max(sph.radius, .4);
+  const dist = r / Math.sin(camera.fov*DEG/2) * 1.1;
+  const dir = camera.position.clone().sub(orbit.target).normalize();
+  flyTo(sph.center.clone().add(dir.multiplyScalar(dist)), sph.center.clone());
+}
+const VIEWS = {persp:[1,.75,1.3], top:[0,1,.0001], front:[0,0,1], side:[1,0,0]};
+function setView(v){
+  const dist = camera.position.distanceTo(orbit.target);
+  flyTo(orbit.target.clone().add(new THREE.Vector3(...VIEWS[v]).normalize().multiplyScalar(dist)), orbit.target.clone());
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on', b.dataset.arg===v));
+  $('#camName').textContent = v;
+}
+orbit.addEventListener('start', () => {
+  if($('#camName').textContent !== 'persp'){ $('#camName').textContent = 'persp';
+    document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on', b.dataset.arg==='persp')); }
+});
+function setWire(on){
+  wire = on;
+  objects.forEach(o => { if(o.mesh.isMesh && o.type !== 'light') o.mesh.material.wireframe = on; });
+  document.querySelectorAll('#shadeSeg button').forEach(b=>b.classList.toggle('on', (b.dataset.cmd==='wire')===on));
+}
+
+/* ---------- animation ---------- */
+const keyFrames = o => Object.keys(o.keys).map(Number).sort((a,b)=>a-b);
+function setKey(o, f){ o.keys[f] = trs(o.mesh); }
+function autoKeyMaybe(){ if(!autoKey) return; sel.forEach(o => { if(Object.keys(o.keys).length) setKey(o, frame); }); }
+function cr(p0,p1,p2,p3,t){ const t2=t*t, t3=t2*t; return .5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3); }
+function chanVal(o, fs, c, j, t){
+  const K = o.keys, n = fs.length;
+  if(t <= fs[0]) return K[fs[0]][c][j];
+  if(t >= fs[n-1]) return K[fs[n-1]][c][j];
+  let i = 0; while(fs[i+1] <= t) i++;
+  const a = K[fs[i]][c][j], b = K[fs[i+1]][c][j];
+  if(o.interp === 'step') return a;
+  const u = (t - fs[i]) / (fs[i+1] - fs[i]);
+  if(o.interp === 'linear') return a + (b-a)*u;
+  return cr(K[fs[Math.max(0,i-1)]][c][j], a, b, K[fs[Math.min(n-1,i+2)]][c][j], u);
+}
+function evalObj(o, t){
+  const fs = keyFrames(o); if(!fs.length) return;
+  const v = c => [0,1,2].map(j => chanVal(o, fs, c, j, t));
+  const p = v('p'), r = v('r'), s = v('s');
+  o.mesh.position.set(p[0],p[1],p[2]); o.mesh.rotation.set(r[0],r[1],r[2]); o.mesh.scale.set(s[0],s[1],s[2]);
+}
+function applyFrame(){ objects.forEach(o => evalObj(o, frame)); refreshAttrs(true); }
+function goFrame(f){
+  frame = Math.round(Math.min(end, Math.max(start, f)));
+  applyFrame(); syncTime(); drawTimeline();
+}
+function stepKey(dir){
+  const pool = sel.length ? sel : objects;
+  const fs = [...new Set(pool.flatMap(keyFrames))].sort((a,b)=>a-b);
+  const f = dir > 0 ? fs.find(x=>x>frame) : fs.reverse().find(x=>x<frame);
+  if(f === undefined) return toast(dir>0 ? 'No later key' : 'No earlier key');
+  goFrame(f);
+}
+function togglePlay(){
+  playing = !playing;
+  $('#playBtn').innerHTML = svg(playing ? PAUSE : PLAY);
+  $('#playBtn').classList.toggle('on', playing);
+  if(playing && frame >= end) goFrame(start);
+}
+function keyCmd(){
+  if(!sel.length) return toast('Select an object to key');
+  sel.forEach(o => setKey(o, frame)); commit(); refreshAll();
+  toast(sel.length === 1 ? `Keyed ${sel[0].name} at frame ${frame}` : `Keyed ${sel.length} objects at frame ${frame}`);
+}
+function unkeyCmd(){
+  const list = sel.filter(o => o.keys[frame]);
+  if(!list.length) return toast('No key on this frame');
+  list.forEach(o => delete o.keys[frame]); applyFrame(); commit(); refreshAll();
+  toast(`Removed key at frame ${frame}`);
+}
+
+/* ---------- outliner ---------- */
+const outl = $('#outliner');
+let dragRowId = null;
+function refreshOutliner(){
+  outl.innerHTML = '';
+  $('#objCount').textContent = objects.length ? objects.length + (objects.length===1?' object':' objects') : '';
+  if(!objects.length){ outl.innerHTML = '<div class="empty">Empty scene. Add a shape from the shelf above.</div>'; return; }
+  const p = primary();
+  const walk = (o, depth) => {
+    const row = document.createElement('div');
+    row.className = 'row' + (o===p?' sel':sel.includes(o)?' sel2':'') + (o.mesh.visible?'':' hidden');
+    row.style.paddingLeft = (10 + depth*16) + 'px';
+    row.setAttribute('role','option'); row.setAttribute('aria-selected', sel.includes(o)); row.tabIndex = 0;
+    row.draggable = true;
+    row.innerHTML = `<span class="ico">${svg(ICONS[o.type])}</span><span class="nm"></span>${Object.keys(o.keys).length?'<span class="anim" title="Animated"></span>':''}<button class="eye" title="${o.mesh.visible?'Hide':'Show'}">${svg(o.mesh.visible?EYE:EYE_OFF)}</button>`;
+    row.querySelector('.nm').textContent = o.name;
+    row.addEventListener('click', e => select(o, e.shiftKey || e.ctrlKey || e.metaKey));
+    row.addEventListener('dblclick', () => { setSelection([o]); openPanelsIfMobile(); const n=$('#fName'); n.focus(); n.select(); });
+    row.addEventListener('keydown', e => { if(e.key==='Enter') select(o); });
+    row.querySelector('.eye').addEventListener('click', e => {
+      e.stopPropagation(); o.mesh.visible = !o.mesh.visible; attachGizmo(); commit(); refreshOutliner();
+    });
+    row.addEventListener('dragstart', e => { dragRowId = o.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', o.name); });
+    row.addEventListener('dragover', e => { const d = byId(dragRowId); if(!d || d === o || isAncestor(d, o)) return; e.preventDefault(); e.stopPropagation(); row.classList.add('drop'); });
+    row.addEventListener('dragleave', () => row.classList.remove('drop'));
+    row.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation(); row.classList.remove('drop');
+      const d = byId(dragRowId); dragRowId = null;
+      if(!d || d === o || isAncestor(d, o) || d.parent === o.id) return;
+      reparent(d, o); commit(); refreshOutliner(); refreshAttrs(); toast(`Parented ${d.name} under ${o.name}`);
+    });
+    outl.appendChild(row);
+    children(o).forEach(c => walk(c, depth+1));
+  };
+  objects.filter(o => o.parent == null).forEach(o => walk(o, 0));
+}
+outl.addEventListener('dragover', e => { const d = byId(dragRowId); if(d && d.parent != null){ e.preventDefault(); outl.classList.add('dropzone'); } });
+outl.addEventListener('dragleave', e => { if(e.target === outl) outl.classList.remove('dropzone'); });
+outl.addEventListener('drop', e => {
+  e.preventDefault(); outl.classList.remove('dropzone');
+  const d = byId(dragRowId); dragRowId = null;
+  if(d && d.parent != null){ reparent(d, null); commit(); refreshOutliner(); refreshAttrs(); toast(`Unparented ${d.name}`); }
+});
+outl.addEventListener('dragend', () => { outl.classList.remove('dropzone'); dragRowId = null; });
+
+/* ---------- attribute editor ---------- */
+const CH = [['p','Translate',.01],['r','Rotate',.5],['s','Scale',.01]];
+const trsInputs = {};
+(function buildTRS(){
+  const host = $('#trsRows');
+  for(const [c,label,step] of CH){
+    const row = document.createElement('div'); row.className='trs';
+    const lab = document.createElement('span'); lab.textContent = label; lab.title='Drag sideways to scrub all three'; row.appendChild(lab);
+    trsInputs[c] = [];
+    ['x','y','z'].forEach((a,i)=>{
+      const w = document.createElement('label'); w.className='ax';
+      const b = document.createElement('b'); b.className=a; b.textContent=a.toUpperCase(); b.title='Drag sideways to scrub';
+      const inp = document.createElement('input'); inp.type='number'; inp.step = c==='r' ? '1' : '0.1';
+      inp.setAttribute('aria-label', `${label} ${a.toUpperCase()}`);
+      inp.addEventListener('change', () => {
+        const v = parseFloat(inp.value); const p = primary(); if(!p || !isFinite(v)) return refreshAttrs();
+        setChannel(c, i, v); autoKeyMaybe(); commit(); refreshAttrs(); drawTimeline();
+      });
+      w.append(b, inp); row.appendChild(w); trsInputs[c].push(inp);
+      scrubber(b, c, [i], step);
+    });
+    scrubber(lab, c, [0,1,2], step);
+    host.appendChild(row);
+  }
+})();
+function getChannel(c,i){
+  const m = primary().mesh;
+  if(c==='p') return m.position.getComponent(i);
+  if(c==='r') return m.rotation[['x','y','z'][i]] / DEG;
+  return m.scale.getComponent(i);
+}
+function setChannel(c,i,v){
+  const m = primary().mesh;
+  if(c==='p') m.position.setComponent(i, v);
+  else if(c==='r') m.rotation[['x','y','z'][i]] = v*DEG;
+  else m.scale.setComponent(i, v);
+}
+function scrubber(el, c, idx, step){
+  let sx = 0, base = null;
+  el.addEventListener('pointerdown', e => {
+    if(!primary()) return; e.preventDefault();
+    el.setPointerCapture(e.pointerId); sx = e.clientX; base = idx.map(i=>getChannel(c,i));
+  });
+  el.addEventListener('pointermove', e => {
+    if(!base) return;
+    const d = (e.clientX - sx) * step * (e.shiftKey ? .1 : 1);
+    idx.forEach((i,k)=>setChannel(c, i, base[k] + d));
+    refreshAttrs(true);
+  });
+  const fin = () => { if(!base) return; base = null; autoKeyMaybe(); commit(); refreshAttrs(); drawTimeline(); };
+  el.addEventListener('pointerup', fin); el.addEventListener('pointercancel', fin);
+}
+const fmt = v => { const n = Math.round(v*1000)/1000; return String(Object.is(n,-0) ? 0 : n); };
+function refreshAttrs(live){
+  const body = $('#aeBody'), o = primary();
+  updateHud();
+  if(!o){ body.hidden = true; $('#aeEmpty').hidden = false; return; }
+  body.hidden = false; $('#aeEmpty').hidden = true;
+  const a = document.activeElement;
+  if(a !== $('#fName')) $('#fName').value = o.name;
+  const par = o.parent != null ? byId(o.parent) : null;
+  $('#parentLine').textContent = (par ? `Child of ${par.name}` : 'At the scene root') + (sel.length > 1 ? `. ${sel.length} selected, editing ${o.name}.` : '');
+  const keyed = !!o.keys[frame], animated = Object.keys(o.keys).length > 0;
+  for(const [c] of CH) trsInputs[c].forEach((inp,i) => {
+    if(inp !== a) inp.value = fmt(getChannel(c,i));
+    inp.classList.toggle('keyed', keyed); inp.classList.toggle('animated', animated && !keyed);
+  });
+  $('#matSec').hidden = o.type === 'light' || o.type === 'group';
+  $('#lightSec').hidden = o.type !== 'light';
+  if(!live){
+    if(o.type === 'light'){ $('#fLColor').value = o.color; $('#fInt').value = o.intensity; $('#oInt').textContent = o.intensity.toFixed(2); }
+    else if(o.type !== 'group'){ $('#fColor').value = o.color; $('#fRough').value = o.rough; $('#oRough').textContent = o.rough.toFixed(2);
+           $('#fMetal').value = o.metal; $('#oMetal').textContent = o.metal.toFixed(2); }
+  }
+}
+$('#fName').addEventListener('change', e => {
+  const o = primary(); if(!o) return;
+  const v = e.target.value.trim().replace(/\s+/g,'_');
+  if(v && !objects.some(x=>x!==o && x.name===v)){ o.name = v; o.mesh.name = v; }
+  else if(v) toast('That name is taken');
+  commit(); refreshOutliner(); refreshAttrs();
+});
+const matTargets = () => sel.filter(o => o.type !== 'light' && o.type !== 'group');
+$('#fColor').addEventListener('input', e => matTargets().forEach(o => { o.color = e.target.value; setMatColor(o.mesh.material, o.color); }));
+$('#fRough').addEventListener('input', e => { matTargets().forEach(o => { o.rough = +e.target.value; o.mesh.material.roughness = o.rough; }); $('#oRough').textContent = (+e.target.value).toFixed(2); });
+$('#fMetal').addEventListener('input', e => { matTargets().forEach(o => { o.metal = +e.target.value; o.mesh.material.metalness = o.metal; }); $('#oMetal').textContent = (+e.target.value).toFixed(2); });
+$('#fLColor').addEventListener('input', e => { const o = primary(); if(!o) return; o.color = e.target.value; setMatColor(o.mesh.material, o.color); setMatColor(o.light, o.color); });
+$('#fInt').addEventListener('input', e => { const o = primary(); if(!o) return; o.intensity = +e.target.value; o.light.intensity = o.intensity; $('#oInt').textContent = o.intensity.toFixed(2); });
+['#fColor','#fRough','#fMetal','#fLColor','#fInt'].forEach(s => $(s).addEventListener('change', commit));
+
+/* ---------- timeline ---------- */
+const tl = $('#tl'), tctx = tl.getContext('2d');
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const PAD = 14;
+const fx = (f, w) => PAD + (f - start) / Math.max(1, end - start) * (w - 2*PAD);
+function fitCanvas(cv, ctx){
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if(!w || !h) return null;
+  if(cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return [w,h];
+}
+function drawTimeline(){
+  drawGraph();
+  const sz = fitCanvas(tl, tctx); if(!sz) return;
+  const [w,h] = sz;
+  tctx.fillStyle = css('--tl-bg'); tctx.fillRect(0,0,w,h);
+  const ppf = (w - 2*PAD) / Math.max(1, end - start);
+  const lab = [1,2,5,10,20,25,50,100,200,500,1000].find(s => s*ppf >= 42) || 1000;
+  const tick = css('--tl-tick');
+  tctx.strokeStyle = tick; tctx.fillStyle = tick; tctx.lineWidth = 1;
+  tctx.font = '11px Barlow, system-ui, sans-serif'; tctx.textAlign = 'center';
+  tctx.beginPath();
+  for(let f = start; f <= end; f++){
+    const x = Math.round(fx(f,w)) + .5, major = (f % lab === 0) || f === start;
+    if(major || ppf >= 4){ tctx.moveTo(x, h); tctx.lineTo(x, h - (major ? 12 : 5)); }
+    if(major) tctx.fillText(f, x, h - 16);
+  }
+  tctx.stroke();
+  const p = primary();
+  if(p){
+    tctx.fillStyle = css('--key');
+    const kw = Math.max(2, Math.min(6, ppf*.6));
+    keyFrames(p).forEach(f => { if(f>=start && f<=end) tctx.fillRect(fx(f,w) - kw/2, 4, kw, h - 8); });
+  }
+  const cx = fx(frame, w);
+  tctx.fillStyle = css('--sel'); tctx.globalAlpha = .9;
+  tctx.fillRect(cx - Math.max(1.5, ppf*.5), 0, Math.max(3, ppf), h);
+  tctx.globalAlpha = 1;
+  const label = String(frame); tctx.font = '600 12px Barlow, system-ui, sans-serif';
+  const tw = tctx.measureText(label).width + 10, lx = Math.min(w - tw - 2, Math.max(2, cx + 4));
+  tctx.fillStyle = css('--sel'); tctx.fillRect(lx, 4, tw, 17);
+  tctx.fillStyle = css('--sel-ink'); tctx.textAlign = 'left'; tctx.fillText(label, lx + 5, 17);
+}
+let scrubbingTL = false;
+const tlFrameAt = e => { const r = tl.getBoundingClientRect(); return start + (e.clientX - r.left - PAD) / (r.width - 2*PAD) * (end - start); };
+tl.addEventListener('pointerdown', e => { scrubbingTL = true; tl.setPointerCapture(e.pointerId); if(playing) togglePlay(); goFrame(tlFrameAt(e)); });
+tl.addEventListener('pointermove', e => { if(scrubbingTL) goFrame(tlFrameAt(e)); });
+tl.addEventListener('pointerup', () => { scrubbingTL = false; });
+tl.addEventListener('pointercancel', () => { scrubbingTL = false; });
+
+function syncTime(){
+  const a = document.activeElement;
+  if(a !== $('#fFrame')) $('#fFrame').value = frame;
+  if(a !== $('#fStart')) $('#fStart').value = start;
+  if(a !== $('#fEnd')) $('#fEnd').value = end;
+  updateHud();
+}
+$('#fFrame').addEventListener('change', e => goFrame(+e.target.value || start));
+$('#fStart').addEventListener('change', e => { const v = Math.round(+e.target.value); if(isFinite(v) && v < end) start = v; goFrame(frame); commit(); });
+$('#fEnd').addEventListener('change', e => { const v = Math.round(+e.target.value); if(isFinite(v) && v > start) end = v; goFrame(frame); commit(); });
+$('#fFps').addEventListener('change', e => { fps = +e.target.value; commit(); });
+function updateHud(){
+  const p = primary();
+  $('#hud').textContent = `Frame ${frame}` + (p ? `   ${p.name}` : '') + (sel.length > 1 ? ` +${sel.length-1}` : '');
+}
+
+/* ---------- graph editor ---------- */
+const graphEl = $('#graph'), gcv = $('#gcv'), gctx = gcv.getContext('2d');
+const AXC = ['#e2574c','#6bbf59','#4f8fe6'];
+const CHANS = [];
+for(const [c,lab] of [['p','Translate'],['r','Rotate'],['s','Scale']]) for(let j=0;j<3;j++)
+  CHANS.push({c, j, id:c+j, label:`${lab} ${'XYZ'[j]}`, color:AXC[j], dash: c==='r' ? [7,4] : c==='s' ? [2,3] : []});
+let gShow = new Set(['p0','p1','p2']);
+let gView = null, gNeedsFit = true, gSelKey = null, gDrag = null, gPan = null;
+const disp = (c,v) => c==='r' ? v/DEG : v, undisp = (c,v) => c==='r' ? v*DEG : v;
+const GM = {l:44, r:12, t:12, b:20};
+function buildChanList(){
+  const host = $('#gchan'); host.innerHTML = '';
+  for(const ch of CHANS){
+    const r = document.createElement('div'); r.className = 'gch' + (gShow.has(ch.id) ? '' : ' off');
+    r.style.color = ch.color;
+    r.innerHTML = `<i class="${ch.c==='r'?'d':ch.c==='s'?'t':''}"></i><span style="color:var(--text)">${ch.label}</span>`;
+    r.title = 'Click to show or hide. Double-click to show only this curve.';
+    r.addEventListener('click', () => { gShow.has(ch.id) ? gShow.delete(ch.id) : gShow.add(ch.id); gNeedsFit = true; buildChanList(); drawGraph(); });
+    r.addEventListener('dblclick', () => { gShow = new Set([ch.id]); gNeedsFit = true; buildChanList(); drawGraph(); });
+    host.appendChild(r);
+  }
+}
+buildChanList();
+function gFit(o){
+  const fs = keyFrames(o);
+  let v0 = Infinity, v1 = -Infinity;
+  const f0 = fs.length ? Math.min(fs[0], start) : start, f1 = fs.length ? Math.max(fs[fs.length-1], end) : end;
+  for(const ch of CHANS){
+    if(!gShow.has(ch.id) || !fs.length) continue;
+    for(let i = 0; i <= 80; i++){
+      const v = disp(ch.c, chanVal(o, fs, ch.c, ch.j, f0 + (f1-f0)*i/80));
+      v0 = Math.min(v0, v); v1 = Math.max(v1, v);
+    }
+  }
+  if(!isFinite(v0)){ v0 = -1; v1 = 1; }
+  if(v1 - v0 < 1e-3){ v0 -= 1; v1 += 1; }
+  const pv = (v1-v0)*.12, pf = Math.max(1,(f1-f0)*.03);
+  gView = {f0:f0-pf, f1:f1+pf, v0:v0-pv, v1:v1+pv};
+}
+function gMap(w,h){
+  const V = gView, pw = w - GM.l - GM.r, ph = h - GM.t - GM.b;
+  return {
+    x: f => GM.l + (f - V.f0)/(V.f1 - V.f0)*pw,
+    y: v => GM.t + (V.v1 - v)/(V.v1 - V.v0)*ph,
+    f: x => V.f0 + (x - GM.l)/pw*(V.f1 - V.f0),
+    v: y => V.v1 - (y - GM.t)/ph*(V.v1 - V.v0),
+    pw, ph
+  };
+}
+function niceStep(range, px, target){
+  const raw = range / Math.max(1, px/target), p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw/p; return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * p;
+}
+function drawGraph(){
+  if(graphEl.hidden) return;
+  const sz = fitCanvas(gcv, gctx); if(!sz) return;
+  const [w,h] = sz, o = primary();
+  gctx.clearRect(0,0,w,h);
+  gctx.font = '11px Barlow, system-ui, sans-serif';
+  const fs = o ? keyFrames(o) : [];
+  document.querySelectorAll('[data-cmd="interp"]').forEach(b => b.classList.toggle('on', !!o && o.interp === b.dataset.arg));
+  syncKeyFields(o);
+  if(!o || !fs.length){
+    gctx.fillStyle = css('--text-dim'); gctx.textAlign = 'center';
+    gctx.fillText(o ? `${o.name} has no keys yet. Press S to key it at this frame.` : 'Select an animated object to see its curves.', w/2, h/2);
+    return;
+  }
+  if(gNeedsFit || !gView){ gFit(o); gNeedsFit = false; }
+  const M = gMap(w,h), V = gView;
+  // grid
+  gctx.strokeStyle = css('--graph-grid'); gctx.fillStyle = css('--text-dim'); gctx.lineWidth = 1;
+  const fstep = Math.max(1, niceStep(V.f1-V.f0, M.pw, 60)), vstep = niceStep(V.v1-V.v0, M.ph, 34);
+  gctx.beginPath(); gctx.textAlign = 'center';
+  for(let f = Math.ceil(V.f0/fstep)*fstep; f <= V.f1; f += fstep){ const x = Math.round(M.x(f))+.5; gctx.moveTo(x, GM.t); gctx.lineTo(x, h-GM.b); gctx.fillText(Math.round(f), x, h-6); }
+  gctx.textAlign = 'right';
+  for(let v = Math.ceil(V.v0/vstep)*vstep; v <= V.v1; v += vstep){ const y = Math.round(M.y(v))+.5; gctx.moveTo(GM.l, y); gctx.lineTo(w-GM.r, y); gctx.fillText(fmt(v), GM.l-6, y+4); }
+  gctx.stroke();
+  // range shade & current frame
+  gctx.fillStyle = css('--graph-grid');
+  if(M.x(start) > GM.l) gctx.fillRect(GM.l, GM.t, M.x(start)-GM.l, M.ph);
+  if(M.x(end) < w-GM.r) gctx.fillRect(M.x(end), GM.t, w-GM.r-M.x(end), M.ph);
+  gctx.strokeStyle = css('--sel'); gctx.lineWidth = 1.5;
+  gctx.beginPath(); gctx.moveTo(M.x(frame), GM.t); gctx.lineTo(M.x(frame), h-GM.b); gctx.stroke();
+  // curves
+  gctx.save(); gctx.beginPath(); gctx.rect(GM.l, GM.t, M.pw, M.ph); gctx.clip();
+  for(const ch of CHANS){
+    if(!gShow.has(ch.id)) continue;
+    gctx.strokeStyle = ch.color; gctx.lineWidth = 1.6; gctx.setLineDash(ch.dash);
+    gctx.beginPath();
+    for(let x = GM.l; x <= w-GM.r; x += 2){
+      const y = M.y(disp(ch.c, chanVal(o, fs, ch.c, ch.j, M.f(x))));
+      x === GM.l ? gctx.moveTo(x,y) : gctx.lineTo(x,y);
+    }
+    gctx.stroke(); gctx.setLineDash([]);
+    for(const f of fs){
+      const x = M.x(f), y = M.y(disp(ch.c, o.keys[f][ch.c][ch.j]));
+      const on = gSelKey && gSelKey.f === f && gSelKey.id === ch.id;
+      gctx.fillStyle = on ? css('--sel') : css('--graph-bg'); gctx.strokeStyle = on ? css('--sel') : ch.color; gctx.lineWidth = 1.5;
+      gctx.beginPath(); gctx.rect(x - (on?4.5:3.5), y - (on?4.5:3.5), on?9:7, on?9:7); gctx.fill(); gctx.stroke();
+    }
+  }
+  gctx.restore();
+}
+function syncKeyFields(o){
+  const fF = $('#gkFrame'), fV = $('#gkVal'), a = document.activeElement;
+  const ok = !!(o && gSelKey && o.keys[gSelKey.f]);
+  fF.disabled = fV.disabled = !ok;
+  if(!ok){ if(a !== fF) fF.value = ''; if(a !== fV) fV.value = ''; return; }
+  const ch = CHANS.find(c => c.id === gSelKey.id);
+  if(a !== fF) fF.value = gSelKey.f;
+  if(a !== fV) fV.value = fmt(disp(ch.c, o.keys[gSelKey.f][ch.c][ch.j]));
+}
+function moveKeyTime(o, from, to){
+  if(to === from || o.keys[to]) return false;
+  o.keys[to] = o.keys[from]; delete o.keys[from]; return true;
+}
+$('#gkFrame').addEventListener('change', e => {
+  const o = primary(); if(!o || !gSelKey) return;
+  const to = Math.round(+e.target.value);
+  if(isFinite(to) && moveKeyTime(o, gSelKey.f, to)){ gSelKey.f = to; applyFrame(); commit(); refreshAll(); }
+  else { toast('There is already a key on that frame'); drawGraph(); }
+});
+$('#gkVal').addEventListener('change', e => {
+  const o = primary(); if(!o || !gSelKey) return;
+  const ch = CHANS.find(c => c.id === gSelKey.id), v = parseFloat(e.target.value);
+  if(isFinite(v)){ o.keys[gSelKey.f][ch.c][ch.j] = undisp(ch.c, v); applyFrame(); commit(); refreshAll(); }
+});
+function hitKey(o, M, x, y){
+  const fs = keyFrames(o); let best = null, bd = 64;
+  for(const ch of CHANS){ if(!gShow.has(ch.id)) continue;
+    for(const f of fs){ const dx = M.x(f)-x, dy = M.y(disp(ch.c, o.keys[f][ch.c][ch.j]))-y, d = dx*dx+dy*dy; if(d < bd){ bd = d; best = {f, id:ch.id}; } } }
+  return best;
+}
+gcv.addEventListener('pointerdown', e => {
+  const o = primary(); if(!o || !gView) return;
+  const r = gcv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, M = gMap(r.width, r.height);
+  gcv.setPointerCapture(e.pointerId);
+  if(e.button === 2 || e.button === 1 || e.altKey){ gPan = {x:e.clientX, y:e.clientY, V:{...gView}}; return; }
+  const k = hitKey(o, M, x, y);
+  gSelKey = k;
+  if(k){
+    const ch = CHANS.find(c => c.id === k.id);
+    gDrag = {o, sx:e.clientX, sy:e.clientY, f0:k.f, v0:disp(ch.c, o.keys[k.f][ch.c][ch.j]), ch, axis:null, moved:false};
+  } else if(y > GM.t && x > GM.l){ goFrame(M.f(x)); gDrag = {scrub:true}; }
+  drawGraph();
+});
+gcv.addEventListener('pointermove', e => {
+  const r = gcv.getBoundingClientRect(), M = gMap(r.width, r.height);
+  if(gPan){
+    const df = (e.clientX - gPan.x)/M.pw*(gPan.V.f1-gPan.V.f0), dv = (e.clientY - gPan.y)/M.ph*(gPan.V.v1-gPan.V.v0);
+    gView = {f0:gPan.V.f0-df, f1:gPan.V.f1-df, v0:gPan.V.v0+dv, v1:gPan.V.v1+dv}; drawGraph(); return;
+  }
+  if(!gDrag) return;
+  if(gDrag.scrub){ goFrame(M.f(e.clientX - r.left)); return; }
+  const dx = e.clientX - gDrag.sx, dy = e.clientY - gDrag.sy;
+  if(!gDrag.axis){ if(dx*dx + dy*dy < 25) return; gDrag.axis = Math.abs(dx) > Math.abs(dy) ? 'f' : 'v'; }
+  const o = gDrag.o, ch = gDrag.ch;
+  if(gDrag.axis === 'v'){
+    let v = gDrag.v0 - dy/M.ph*(gView.v1-gView.v0);
+    if(e.shiftKey){ const st = niceStep(gView.v1-gView.v0, M.ph, 34)/5; v = Math.round(v/st)*st; }
+    o.keys[gSelKey.f][ch.c][ch.j] = undisp(ch.c, v);
+  } else {
+    const to = Math.round(gDrag.f0 + dx/M.pw*(gView.f1-gView.f0));
+    if(moveKeyTime(o, gSelKey.f, to)) gSelKey.f = to;
+  }
+  gDrag.moved = true;
+  applyFrame(); drawTimeline();
+});
+const gEnd = () => {
+  if(gDrag && gDrag.moved){ commit(); refreshAll(); }
+  gDrag = null; gPan = null;
+};
+gcv.addEventListener('pointerup', gEnd); gcv.addEventListener('pointercancel', gEnd);
+gcv.addEventListener('contextmenu', e => e.preventDefault());
+gcv.addEventListener('dblclick', () => { gNeedsFit = true; drawGraph(); });
+gcv.addEventListener('wheel', e => {
+  if(!gView) return; e.preventDefault();
+  const r = gcv.getBoundingClientRect(), M = gMap(r.width, r.height);
+  const f = M.f(e.clientX - r.left), v = M.v(e.clientY - r.top), k = Math.exp(e.deltaY * .0015);
+  const zf = !e.altKey, zv = !e.shiftKey;
+  gView = {f0: zf ? f + (gView.f0-f)*k : gView.f0, f1: zf ? f + (gView.f1-f)*k : gView.f1,
+           v0: zv ? v + (gView.v0-v)*k : gView.v0, v1: zv ? v + (gView.v1-v)*k : gView.v1};
+  drawGraph();
+}, {passive:false});
+function toggleGraph(force){
+  const show = force ?? graphEl.hidden;
+  graphEl.hidden = !show;
+  $('#graphBtn').classList.toggle('on', show); $('#graphBtn2').classList.toggle('on', show);
+  gNeedsFit = true;
+  requestAnimationFrame(() => { resize(); drawGraph(); });
+}
+function setInterp(mode){
+  const list = sel.length ? sel : [];
+  if(!list.length) return toast('Select an object first');
+  list.forEach(o => o.interp = mode); applyFrame(); commit(); drawTimeline();
+  toast(`Curves set to ${mode === 'step' ? 'stepped' : mode}`);
+}
+
+/* ---------- files, render, export ---------- */
+const DL_OK = new Set(['gif','png','jpg','jpeg','webp','mp4','webm','txt','json','md','csv','svg','html','zip']);
+async function saveFile(filename, blob){
+  const ext = filename.split('.').pop().toLowerCase();
+  if(window.claude && typeof window.claude.use === 'function'){
+    let dl = null; try{ dl = await window.claude.use('downloads'); }catch(e){}
+    if(dl){
+      if(!DL_OK.has(ext)) return toast(`.${ext} export works in the local studio build`);
+      try{ await dl.save({filename, data:blob}); toast(`Saved ${filename}`); }
+      catch(e){ if(e && e.code !== 'declined') toast(`Could not save: ${e.message || e.code}`); }
+      return;
+    }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  toast(`Downloaded ${filename}`);
+}
+const stamp = () => { const d = new Date(), z = n => String(n).padStart(2,'0'); return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`; };
+const baseName = () => (studioName || 'scene').replace(/[^\w-]+/g,'_');
+
+function withCleanScene(fn){
+  const st = {grid:grid.visible, tc:tc.visible};
+  clearOverlays(); tc.visible = false;
+  try{ return fn(); }
+  finally{ tc.visible = st.tc; grid.visible = st.grid; sel.forEach(o => addOverlay(o, o === primary() ? selMat : selMat2)); }
+}
+function exportRoot(){
+  const root = new THREE.Group(); root.name = 'MiniMayaScene';
+  objects.filter(o => o.parent == null).forEach(o => {
+    const c = o.mesh.clone(true);
+    const strip = []; c.traverse(n => { if(n.userData.helper) strip.push(n); });
+    strip.forEach(n => n.parent && n.parent.remove(n));
+    root.add(c);
+  });
+  return root;
+}
+function bakeClip(){
+  const tracks = [], n = end - start + 1, times = [];
+  for(let f = start; f <= end; f++) times.push((f - start)/fps);
+  for(const o of objects){
+    const fs = keyFrames(o); if(!fs.length) continue;
+    const P = [], Q = [], S = [], e = new THREE.Euler(), q = new THREE.Quaternion();
+    for(let f = start; f <= end; f++){
+      const v = c => [0,1,2].map(j => chanVal(o, fs, c, j, f));
+      P.push(...v('p')); S.push(...v('s'));
+      const r = v('r'); e.set(r[0],r[1],r[2]); q.setFromEuler(e); Q.push(q.x,q.y,q.z,q.w);
+    }
+    tracks.push(new THREE.VectorKeyframeTrack(`${o.name}.position`, times, P));
+    tracks.push(new THREE.QuaternionKeyframeTrack(`${o.name}.quaternion`, times, Q));
+    tracks.push(new THREE.VectorKeyframeTrack(`${o.name}.scale`, times, S));
+  }
+  return tracks.length ? new THREE.AnimationClip('Take1', (n-1)/fps, tracks) : null;
+}
+function exportGLB(){
+  if(!objects.length) return toast('The scene is empty');
+  const root = withCleanScene(exportRoot);
+  const clip = bakeClip();
+  new THREE.GLTFExporter().parse(root, res => {
+    saveFile(`${baseName()}-${stamp()}.glb`, new Blob([res], {type:'model/gltf-binary'}));
+  }, {binary:true, animations: clip ? [clip] : [], onlyVisible:true});
+}
+function exportOBJ(){
+  if(!objects.length) return toast('The scene is empty');
+  const root = withCleanScene(exportRoot);
+  root.updateMatrixWorld(true);
+  const lights = []; root.traverse(n => { if(n.userData.isLight) lights.push(n); });
+  lights.forEach(l => l.parent && l.parent.remove(l));
+  const txt = new THREE.OBJExporter().parse(root);
+  saveFile(`${baseName()}-${stamp()}.obj`, new Blob([txt], {type:'text/plain'}));
+}
+
+let rr = null;
+function offRenderer(){
+  if(rr) return rr;
+  rr = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+  rr.shadowMap.enabled = true; rr.shadowMap.type = THREE.PCFSoftShadowMap; rr.outputEncoding = THREE.sRGBEncoding;
+  rr.domElement.style.cssText = 'position:fixed;left:-10000px;top:0;pointer-events:none';
+  document.body.appendChild(rr.domElement);
+  return rr;
+}
+const rset = {w:1280, h:720, bg:'#3d434a', grid:false};
+function renderTo(w, h){
+  const r = offRenderer(); r.setPixelRatio(1); r.setSize(w, h, false);
+  r.setClearColor(new THREE.Color(rset.bg), 1);
+  const cam = camera.clone(); cam.aspect = w/h; cam.updateProjectionMatrix();
+  withCleanScene(() => { grid.visible = rset.grid; r.render(scene, cam); });
+  return r.domElement;
+}
+let pbRec = null;
+function renderDialog(){
+  dialog({title:'Render & playblast', html:`
+    <div class="form">
+      <span>Size</span><div class="pair"><input type="number" id="rW" min="64" max="3840" value="${rset.w}"> × <input type="number" id="rH" min="64" max="2160" value="${rset.h}"></div>
+      <span>Background</span><input type="color" id="rBg" value="${rset.bg}">
+      <span>Grid</span><label class="pair"><input type="checkbox" id="rGrid" ${rset.grid?'checked':''}> Show the floor grid</label>
+      <span>Playblast range</span><div class="pair" style="color:var(--text-dim)">Frames ${start} to ${end} at ${fps} fps</div>
+    </div>
+    <div class="preview" id="rPrev"><div class="ph">Render a still of frame ${frame}, or record the frame range as a video.</div></div>
+    <div class="prog" id="rProg" hidden><i></i></div>`,
+    buttons:[
+      {label:'Playblast', id:'rPB', onClick:playblast},
+      {label:'Render frame', primary:true, id:'rGo', onClick:renderStill}
+    ]});
+  const sync = () => { rset.w = Math.max(64, Math.min(3840, Math.round(+$('#rW').value || 1280))); rset.h = Math.max(64, Math.min(2160, Math.round(+$('#rH').value || 720))); rset.bg = $('#rBg').value; rset.grid = $('#rGrid').checked; };
+  ['#rW','#rH','#rBg','#rGrid'].forEach(s => $(s).addEventListener('change', sync));
+}
+function readRenderForm(){ if($('#rW')){ rset.w = Math.max(64, Math.min(3840, Math.round(+$('#rW').value || 1280))); rset.h = Math.max(64, Math.min(2160, Math.round(+$('#rH').value || 720))); rset.bg = $('#rBg').value; rset.grid = $('#rGrid').checked; } }
+function renderStill(){
+  readRenderForm();
+  const cv = renderTo(rset.w, rset.h);
+  cv.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    $('#rPrev').innerHTML = `<img alt="Render of frame ${frame}" src="${url}">`;
+    setDlgButtons([
+      {label:'Playblast', onClick:playblast},
+      {label:'Render again', onClick:renderStill},
+      {label:'Save PNG', primary:true, onClick:() => saveFile(`${baseName()}-f${frame}-${stamp()}.png`, blob)}
+    ]);
+    dmsg(`${rset.w} × ${rset.h}, frame ${frame}`);
+  }, 'image/png');
+}
+function pickMime(){
+  const c = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4;codecs=avc1','video/mp4'];
+  return c.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+function playblast(){
+  readRenderForm();
+  if(!window.MediaRecorder) return dmsg('This browser cannot record video.');
+  if(playing) togglePlay();
+  const mime = pickMime();
+  const w = rset.w - rset.w % 2, h = rset.h - rset.h % 2;
+  renderTo(w, h);
+  const cv = offRenderer().domElement;
+  const stream = cv.captureStream(fps);
+  const rec = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:8e6} : undefined);
+  const chunks = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const startFrame = frame; let f = start, cancelled = false;
+  pbRec = {cancel:() => { cancelled = true; }};
+  $('#rProg').hidden = false;
+  setDlgButtons([{label:'Stop', onClick:() => pbRec && pbRec.cancel()}]);
+  rec.onstop = () => {
+    pbRec = null; $('#rProg').hidden = true;
+    goFrame(startFrame);
+    if(cancelled && !chunks.length){ dmsg('Playblast stopped.'); setDlgButtons([{label:'Playblast', onClick:playblast},{label:'Render frame', primary:true, onClick:renderStill}]); return; }
+    const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
+    const ext = type.includes('mp4') ? 'mp4' : 'webm';
+    const blob = new Blob(chunks, {type});
+    $('#rPrev').innerHTML = `<video controls loop autoplay muted playsinline src="${URL.createObjectURL(blob)}"></video>`;
+    dmsg(`${end-start+1} frames, ${w} × ${h}, ${(blob.size/1048576).toFixed(1)} MB`);
+    setDlgButtons([
+      {label:'Playblast again', onClick:playblast},
+      {label:`Save ${ext.toUpperCase()}`, primary:true, onClick:() => saveFile(`${baseName()}-playblast-${stamp()}.${ext}`, blob)}
+    ]);
+  };
+  rec.start();
+  const tick = () => {
+    if(cancelled || f > end || !dlg.open){ rec.stop(); return; }
+    frame = f; objects.forEach(o => evalObj(o, f));
+    renderTo(w, h);
+    $('#rProg i').style.width = ((f - start + 1)/(end - start + 1)*100) + '%';
+    dmsg(`Recording frame ${f} of ${end}`);
+    f++; setTimeout(tick, 1000/fps);
+  };
+  tick();
+}
+
+/* ---------- studio server ---------- */
+let server = null, dirty = false;
+function setDirty(v){ dirty = v; updateStatus(); }
+function updateStatus(){
+  const s = $('#status');
+  if(!server){ s.textContent = ''; return; }
+  s.textContent = studioName ? `${studioName}${dirty ? ' (unsaved)' : ''}` : (dirty ? 'Not saved to studio' : 'Studio connected');
+}
+async function api(path, opts){
+  const r = await fetch('api/' + path, Object.assign({headers:{'Content-Type':'application/json'}}, opts || {}));
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok) throw new Error(j.error || `Server answered ${r.status}`);
+  return j;
+}
+(async () => {
+  try{
+    const j = await api('health');
+    if(j && j.app === 'minimaya'){ server = j; document.body.classList.add('has-server'); updateStatus();
+      try{ studioName = localStorage.getItem('miniMaya.studioName'); }catch(e){} updateStatus(); }
+  }catch(e){}
+})();
+function rememberName(n){ studioName = n; try{ localStorage.setItem('miniMaya.studioName', n || ''); }catch(e){} }
+async function studioSave(asNew){
+  if(!server) return exportScene();
+  if(asNew || !studioName){
+    dialog({title:'Save to studio', html:`<div class="form"><span>Scene name</span><input type="text" id="sName" value="${(studioName||'scene_'+stamp()).replace(/"/g,'')}" spellcheck="false"></div><div class="hint">Letters, numbers, dashes and underscores. Saved in the studio's data/scenes folder on your Mac.</div>`,
+      buttons:[{label:'Save', primary:true, onClick: async () => {
+        const n = $('#sName').value.trim().replace(/[^\w-]+/g,'_').slice(0,64);
+        if(!n) return dmsg('Enter a name.');
+        try{ await api('scenes/' + encodeURIComponent(n), {method:'PUT', body:serialize()}); rememberName(n); setDirty(false); dlg.close(); toast(`Saved ${n} to studio`); }
+        catch(e){ dmsg(e.message); }
+      }}]});
+    setTimeout(() => { const i = $('#sName'); i && (i.focus(), i.select()); }, 30);
+    return;
+  }
+  try{ await api('scenes/' + encodeURIComponent(studioName), {method:'PUT', body:serialize()}); setDirty(false); toast(`Saved ${studioName}`); }
+  catch(e){ toast(e.message); }
+}
+async function studioOpen(){
+  dialog({title:'Open from studio', html:'<div class="hint">Loading scenes…</div><div class="lib" id="lib"></div>', buttons:[]});
+  try{
+    const j = await api('scenes');
+    const lib = $('#lib'); $('#dlgBody .hint').textContent = j.scenes.length ? 'Scenes saved on this studio server, newest first.' : 'No scenes saved yet. Use File, Save to studio.';
+    for(const s of j.scenes){
+      const it = document.createElement('div'); it.className = 'it';
+      it.innerHTML = `<span></span><small>${new Date(s.modified*1000).toLocaleString()}</small><button class="btn primary">Open</button><button class="btn">Delete</button>`;
+      it.querySelector('span').textContent = s.name;
+      const [ob, db] = it.querySelectorAll('button');
+      ob.onclick = async () => { try{ const d = await api('scenes/' + encodeURIComponent(s.name)); restore(d); commit(); rememberName(s.name); setDirty(false); dlg.close(); toast(`Opened ${s.name}`); frameObjects(objects); }catch(e){ dmsg(e.message); } };
+      db.onclick = async () => {
+        if(db.dataset.confirm !== '1'){ db.dataset.confirm = '1'; db.textContent = 'Confirm delete'; return; }
+        try{ await api('scenes/' + encodeURIComponent(s.name), {method:'DELETE'}); it.remove(); if(studioName === s.name) rememberName(null); updateStatus(); }catch(e){ dmsg(e.message); }
+      };
+      lib.appendChild(it);
+    }
+  }catch(e){ dmsg(e.message); }
+}
+
+/* ---------- dialogs ---------- */
+const dlg = $('#dlg');
+const dmsg = t => { $('#dlgMsg').textContent = t; };
+function setDlgButtons(buttons){
+  const f = $('#dlgBtns'); f.innerHTML = '';
+  const c = document.createElement('button'); c.className = 'btn'; c.textContent = 'Close'; c.onclick = () => dlg.close(); f.appendChild(c);
+  for(const b of buttons || []){
+    const el = document.createElement('button'); el.className = 'btn' + (b.primary ? ' primary' : ''); el.textContent = b.label; el.onclick = b.onClick; if(b.id) el.id = b.id;
+    f.appendChild(el);
+  }
+}
+function dialog({title, html, buttons}){
+  $('#dlgTitle').textContent = title; $('#dlgBody').innerHTML = html; dmsg('');
+  setDlgButtons(buttons);
+  if(!dlg.open) dlg.showModal();
+}
+dlg.addEventListener('close', () => { if(pbRec) pbRec.cancel(); });
+function exportScene(){
+  dialog({title:'Scene as JSON text', html:'<textarea id="dlgText" spellcheck="false" readonly></textarea>', buttons:[{label:'Copy to clipboard', primary:true, onClick: async () => {
+    const ta = $('#dlgText');
+    try{ await navigator.clipboard.writeText(ta.value); dmsg('Copied.'); }
+    catch(e){ ta.select(); try{ document.execCommand('copy'); dmsg('Copied.'); }catch(_){ dmsg('Select the text and copy it manually.'); } }
+  }}]});
+  $('#dlgText').value = JSON.stringify(snapshot(), null, 2);
+}
+function importScene(){
+  dialog({title:'Load scene from JSON', html:'<textarea id="dlgText" spellcheck="false" placeholder="Paste a scene exported from Mini Maya Studio"></textarea>', buttons:[{label:'Load scene', primary:true, onClick:() => {
+    try{ restore($('#dlgText').value); commit(); dlg.close(); toast('Scene loaded'); }
+    catch(e){ dmsg(e instanceof SyntaxError ? 'That text is not valid JSON. Paste a scene exported from Mini Maya.' : e.message); }
+  }}]});
+  $('#dlgText').focus();
+}
+function showShortcuts(){
+  const rows = [['Q W E R','Select, move, rotate, scale'],['Shift-click','Add to or remove from the selection'],['F / A','Frame selected / frame all'],
+    ['S','Set key on the selection'],['G','Open or close the Graph Editor'],['Space','Play or pause'],[', and .','Previous / next frame'],
+    ['X','Toggle snapping'],['4 / 5','Wireframe / shaded'],['P / Shift P','Parent to last selected / unparent'],['Ctrl G','Group'],
+    ['Ctrl D','Duplicate'],['Del','Delete with children'],['Ctrl S','Save to studio (local server)'],['Ctrl Z / Ctrl Shift Z','Undo / redo'],['Esc','Clear selection'],
+    ['Mouse','Drag to orbit, right-drag to pan, scroll to zoom'],['Graph Editor','Drag keys, scroll to zoom, right-drag to pan, Shift snaps values']];
+  dialog({title:'Keyboard shortcuts', html:'<dl class="keys">' + rows.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('') + '</dl>', buttons:[]});
+}
+function about(){
+  const v = APP_VERSION.startsWith('__') ? 'development' : APP_VERSION, b = BUILD_ID.startsWith('__') ? 'none' : BUILD_ID;
+  dialog({title:'About this build', html:`<dl class="keys"><dt>Version</dt><dd>${v}</dd><dt>Build</dt><dd>${b}</dd><dt>Studio server</dt><dd>${server ? `connected, server ${server.version}` : 'not connected (scenes save in this browser only)'}</dd><dt>Engine</dt><dd>three.js r128</dd></dl>`, buttons:[]});
+}
+
+/* ---------- misc ---------- */
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 1600); }
+function openPanelsIfMobile(){ if(matchMedia('(max-width:760px)').matches) $('#side').classList.add('open'); }
+const helpEl = $('#help'), DEFAULT_HELP = 'Drag to orbit, right-drag to pan, scroll to zoom. Click to select, Shift-click to add. Press ? for shortcuts.';
+helpEl.textContent = DEFAULT_HELP;
+document.addEventListener('pointerover', e => { const h = e.target.closest('[data-help]'); helpEl.textContent = h ? h.dataset.help : DEFAULT_HELP; });
+function refreshAll(){ refreshOutliner(); refreshAttrs(); drawTimeline(); }
+
+function run(cmd, arg){
+  switch(cmd){
+    case 'create': create(arg); break;
+    case 'new': newScene(); break;
+    case 'export': exportScene(); break;
+    case 'import': importScene(); break;
+    case 'saveJson': saveFile(`${baseName()}-${stamp()}.json`, new Blob([JSON.stringify(snapshot(), null, 2)], {type:'application/json'})); break;
+    case 'exportGlb': exportGLB(); break;
+    case 'exportObj': exportOBJ(); break;
+    case 'studioSave': studioSave(false); break;
+    case 'studioSaveAs': studioSave(true); break;
+    case 'studioOpen': studioOpen(); break;
+    case 'undo': undo(); break;
+    case 'redo': redo(); break;
+    case 'dup': duplicate(); break;
+    case 'del': del(); break;
+    case 'group': groupCmd(); break;
+    case 'parent': parentCmd(); break;
+    case 'unparent': unparentCmd(); break;
+    case 'tool': setTool(arg); break;
+    case 'snap': toggleSnap(); break;
+    case 'frameSel': frameObjects(sel.length ? sel : objects); break;
+    case 'frameAll': frameObjects(objects); break;
+    case 'view': setView(arg); break;
+    case 'shaded': setWire(false); break;
+    case 'wire': setWire(true); break;
+    case 'grid': grid.visible = !grid.visible; break;
+    case 'graph': toggleGraph(); break;
+    case 'gfit': gNeedsFit = true; drawGraph(); break;
+    case 'interp': setInterp(arg); break;
+    case 'render': renderDialog(); break;
+    case 'theme': {
+      const dark = getComputedStyle(document.documentElement).colorScheme.includes('dark');
+      const t = dark ? 'light' : 'dark'; document.documentElement.dataset.theme = t;
+      try{ localStorage.setItem('miniMaya.theme', t); }catch(e){}
+      drawTimeline(); break; }
+    case 'shortcuts': showShortcuts(); break;
+    case 'about': about(); break;
+    case 'panels': $('#side').classList.toggle('open'); break;
+    case 'play': togglePlay(); break;
+    case 'first': goFrame(start); break;
+    case 'last': goFrame(end); break;
+    case 'prevFrame': goFrame(frame-1); break;
+    case 'nextFrame': goFrame(frame+1); break;
+    case 'prevKey': stepKey(-1); break;
+    case 'nextKey': stepKey(1); break;
+    case 'key': keyCmd(); break;
+    case 'unkey': unkeyCmd(); break;
+    case 'auto': autoKey = !autoKey; $('#autoBtn').classList.toggle('on', autoKey); toast(autoKey ? 'Auto key on' : 'Auto key off'); break;
+  }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-cmd]');
+  if(b && !dlg.contains(b)) run(b.dataset.cmd, b.dataset.arg);
+  document.querySelectorAll('details.menu[open]').forEach(d => { if(!d.contains(e.target) || b) d.open = false; });
+});
+document.querySelectorAll('details.menu').forEach(d => d.addEventListener('toggle', () => {
+  if(d.open) document.querySelectorAll('details.menu[open]').forEach(o => { if(o!==d) o.open = false; });
+}));
+
+window.addEventListener('keydown', e => {
+  if(dlg.open) return;
+  const t = e.target;
+  const k = e.key.toLowerCase(), mod = e.ctrlKey || e.metaKey;
+  if(mod && k === 's'){ e.preventDefault(); studioSave(false); return; }
+  if(t.matches && t.matches('input, textarea, select')){
+    if(e.key === 'Enter' && t.matches('input')) t.blur();
+    if(e.key === 'Escape') t.blur();
+    return;
+  }
+  if(mod && k === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if(mod && k === 'y'){ e.preventDefault(); redo(); return; }
+  if(mod && k === 'd'){ e.preventDefault(); duplicate(); return; }
+  if(mod && k === 'g'){ e.preventDefault(); groupCmd(); return; }
+  if(mod || e.altKey) return;
+  if(k === 'p'){ e.preventDefault(); e.shiftKey ? unparentCmd() : parentCmd(); return; }
+  const map = {q:['tool','select'], w:['tool','move'], e:['tool','rotate'], r:['tool','scale'], f:['frameSel'], a:['frameAll'],
+    s:['key'], x:['snap'], g:['graph'], '4':['wire'], '5':['shaded'], delete:['del'], backspace:['del'], ',':['prevFrame'], '.':['nextFrame'], '?':['shortcuts']};
+  if(k === ' '){ e.preventDefault(); togglePlay(); return; }
+  if(k === 'escape'){ setSelection([]); return; }
+  if(map[k]){ e.preventDefault(); run(...map[k]); }
+});
+window.addEventListener('beforeunload', e => { if(server && studioName && dirty){ e.preventDefault(); e.returnValue = ''; } });
+
+/* ---------- resize & loop ---------- */
+function resize(){
+  const w = viewEl.clientWidth, h = viewEl.clientHeight;
+  if(!w || !h) return;
+  renderer.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+  drawTimeline();
+}
+new ResizeObserver(resize).observe(viewEl);
+new ResizeObserver(drawTimeline).observe(tl);
+new ResizeObserver(() => drawGraph()).observe(gcv);
+
+const clock = new THREE.Clock();
+let acc = 0;
+function loop(){
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), .1);
+  if(playing){
+    acc += dt; const spf = 1/fps; let moved = false;
+    while(acc >= spf){ acc -= spf; frame++; if(frame > end) frame = start; moved = true; }
+    if(moved){ applyFrame(); syncTime(); drawTimeline(); }
+  } else acc = 0;
+  if(tween){
+    tween.t = Math.min(1, tween.t + dt/0.32);
+    const k = 1 - Math.pow(1 - tween.t, 3);
+    camera.position.lerpVectors(tween.fromP, tween.toP, k);
+    orbit.target.lerpVectors(tween.fromT, tween.toT, k);
+    if(tween.t >= 1) tween = null;
+  }
+  orbit.update();
+  const w = viewEl.clientWidth, h = viewEl.clientHeight;
+  renderer.setScissorTest(false); renderer.setViewport(0,0,w,h); renderer.clear();
+  renderer.render(scene, camera);
+  axCam.position.copy(camera.position).sub(orbit.target).normalize().multiplyScalar(4);
+  axCam.up.copy(camera.up); axCam.lookAt(0,0,0);
+  const s = 74; renderer.setScissorTest(true); renderer.setScissor(8, 8, s, s); renderer.setViewport(8, 8, s, s);
+  renderer.clearDepth(); renderer.render(axScene, axCam); renderer.setScissorTest(false);
+}
+
+/* ---------- boot ---------- */
+function seed(){
+  const K = (p, r=[0,0,0], s=[1,1,1]) => ({p, r, s});
+  const ball = makeObject({id:nextId++, name:'pSphere1', type:'sphere', color:'#e0a64a', rough:.35, metal:0, p:[-3,.5,0], r:[0,0,0], s:[1,1,1]});
+  ball.keys = {1:K([-3,.5,0]), 30:K([0,2.6,0]), 60:K([3,.5,0]), 90:K([0,2.6,-1.5]), 120:K([-3,.5,0])};
+  const g = makeObject({id:nextId++, name:'group1', type:'group', p:[1.6,0,1.6], r:[0,0,0], s:[1,1,1]});
+  g.keys = {1:K([1.6,0,1.6],[0,0,0]), 120:K([1.6,0,1.6],[0,Math.PI*2,0])};
+  g.interp = 'linear';
+  const cube = makeObject({id:nextId++, name:'pCube1', type:'cube', color:'#8fa7c4', rough:.6, metal:0, p:[0,.5,0], r:[0,0,0], s:[1,1,1]});
+  linkParent(cube, g.id);
+  const cone = makeObject({id:nextId++, name:'pCone1', type:'cone', color:'#9cc49a', rough:.5, metal:0, p:[1.1,.5,0], r:[0,0,0], s:[.6,1,.6]});
+  linkParent(cone, g.id);
+  makeObject({id:nextId++, name:'pTorus1', type:'torus', color:'#c76a5c', rough:.3, metal:.2, p:[-1.4,.68,2], r:[0,-.4,0], s:[1,1,1]});
+  makeObject({id:nextId++, name:'pointLight1', type:'light', color:'#ffd9a0', intensity:.9, p:[2.5,3.2,-1.5], r:[0,0,0], s:[1,1,1]});
+}
+let saved = null;
+try{ saved = localStorage.getItem('miniMaya.scene'); }catch(e){}
+if(saved){ try{ restore(saved); }catch(e){ saved = null; } }
+if(!saved){ removeObjects(objects.slice()); nextId = 1; seed(); applyFrame(); }
+history = [serialize()]; dirty = false;
+setTool('move'); syncTime(); refreshAll(); resize();
+loop();
+window.__miniMaya = {get objects(){ return objects; }, get sel(){ return sel; }, run, select, setSelection, goFrame, serialize};
+})();
+</script>
+</body>
+</html>
