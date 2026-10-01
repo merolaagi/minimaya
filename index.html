@@ -44,7 +44,7 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stro
 
 #app{height:100%;display:grid;
   grid-template-columns:46px minmax(0,1fr) 290px;
-  grid-template-rows:30px 50px minmax(0,1fr) 78px 24px;
+  grid-template-rows:30px 76px minmax(0,1fr) 78px 24px;
   grid-template-areas:"menu menu menu" "shelf shelf shelf" "tools center side" "time time time" "help help help";
   gap:1px;background:var(--line)}
 
@@ -70,7 +70,17 @@ body.has-server hr.srv{display:block!important}
 .status{color:var(--text-dim);font-size:12px;margin-right:8px;white-space:nowrap}
 #panelsBtn{display:none}
 
-.shelf{grid-area:shelf;display:flex;align-items:stretch;gap:2px;padding:4px 8px;background:var(--chrome);overflow-x:auto}
+.shelf{grid-area:shelf;display:grid;grid-template-rows:25px minmax(0,1fr);background:var(--chrome);min-width:0}
+.stabs{display:flex;gap:2px;padding:3px 8px 0;background:var(--chrome-deep);border-bottom:1px solid var(--line);overflow-x:auto}
+.stab{border:0;background:none;padding:2px 11px;border-radius:3px 3px 0 0;font-size:12px;color:var(--text-dim);white-space:nowrap}
+.stab:hover{color:var(--text)}
+.stab.on{background:var(--chrome);color:var(--text);font-weight:600}
+.sbody{display:flex;align-items:stretch;gap:2px;padding:3px 8px;overflow-x:auto}
+.sbody>*{flex:none}
+.sbtn.act{white-space:nowrap;flex-direction:row;gap:6px;min-width:0;padding:2px 10px;font-size:12px}
+.sbtn.act i{width:4px;align-self:stretch;margin:6px 0;border-radius:2px}
+.sbtn.wide{min-width:84px}
+.sep2{width:1px;margin:4px 6px;background:var(--line);flex:none}
 .shelf .grp{display:flex;gap:2px;padding-right:8px;margin-right:6px;border-right:1px solid var(--line)}
 .shelf .grp:last-child{border-right:0}
 .sbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:52px;padding:2px 4px;
@@ -93,12 +103,13 @@ body.has-server hr.srv{display:block!important}
 .seg button:hover{background:rgba(255,255,255,.12)}
 .seg button.on{background:var(--sel);color:var(--sel-ink)}
 .camname{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:#eef1f4;opacity:.8;font-size:12px;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.view.film .camname{bottom:auto;top:10px;left:auto;right:12px;transform:none}
 .hud{position:absolute;bottom:8px;right:10px;color:#eef1f4;font-size:12px;opacity:.85;pointer-events:none;text-align:right;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .toast{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);background:rgba(20,23,27,.8);color:#fff;padding:5px 12px;border-radius:4px;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
 
 /* graph editor */
-.graph{flex:0 0 42%;min-height:160px;display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:32px minmax(0,1fr);background:var(--chrome)}
+.graph{flex:0 0 44%;min-height:160px;display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:32px minmax(0,1fr);background:var(--chrome)}
 .gbar{grid-column:1/3;display:flex;align-items:center;gap:6px;padding:0 8px;border-bottom:1px solid var(--line);overflow-x:auto;white-space:nowrap}
 .gbar b{font-weight:600;margin-right:6px}
 .gbar .b{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:3px;background:var(--chrome-raised)}
@@ -114,6 +125,20 @@ body.has-server hr.srv{display:block!important}
 .gch span{flex:1}
 .gch.off{opacity:.4}
 #gcv{width:100%;height:100%;display:block;background:var(--graph-bg);touch-action:none}
+.graph.story{grid-template-columns:minmax(0,1fr)}
+#scv{grid-column:1/-1;width:100%;height:100%;display:block;background:var(--graph-bg);touch-action:none}
+.gbar select{height:24px;border:1px solid var(--line);border-radius:3px;background:var(--field)}
+.shint{color:var(--text-dim)}
+.cled{display:flex;gap:8px;align-items:center}
+#ceTurn{width:64px}
+.subs{position:absolute;left:50%;transform:translateX(-50%);text-align:center;color:#fff;font-weight:600;white-space:pre-line;line-height:1.2;pointer-events:none;
+  text-shadow:0 0 3px #000,0 0 3px #000,0 2px 4px rgba(0,0,0,.8)}
+.view.picking canvas{cursor:crosshair}
+select{font:inherit}
+.f select{width:100%;height:24px;border:1px solid var(--line);border-radius:3px;background:var(--field)}
+.swatches{display:flex;flex-wrap:wrap;gap:4px}
+.sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--chrome-raised);box-shadow:0 0 0 1px var(--line)}
+.sw:hover{transform:scale(1.1)}
 
 /* side */
 .side{grid-area:side;display:flex;flex-direction:column;min-height:0;background:var(--chrome)}
@@ -200,7 +225,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .lib .it small{color:var(--text-dim)}
 
 @media (max-width:760px){
-  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:30px 50px 42px minmax(0,1fr) 78px;
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:30px 76px 42px minmax(0,1fr) 78px;
     grid-template-areas:"menu" "shelf" "tools" "center" "time"}
   .tools{flex-direction:row;justify-content:flex-start;padding:0 6px;overflow-x:auto}
   .tools hr{width:1px;height:24px;border:0;border-left:1px solid var(--line);margin:0 4px}
@@ -221,6 +246,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
     <div class="brand"><i></i><span>Mini Maya Studio</span><small id="verTag"></small></div>
     <details class="menu"><summary>File</summary><div class="dd">
       <button data-cmd="new">New scene</button>
+      <button data-cmd="demo">Open demo movie</button>
       <hr class="srv">
       <button class="srv" data-cmd="studioSave">Save to studio <kbd>Ctrl S</kbd></button>
       <button class="srv" data-cmd="studioSaveAs">Save to studio as…</button>
@@ -232,6 +258,9 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
       <hr>
       <button data-cmd="exportGlb">Export GLB with animation</button>
       <button data-cmd="exportObj">Export OBJ (current frame)</button>
+      <hr>
+      <button data-cmd="importModel">Import rigged model (GLB)…</button>
+      <button data-cmd="importAudio">Add audio track…</button>
     </div></details>
     <details class="menu"><summary>Edit</summary><div class="dd">
       <button data-cmd="undo">Undo <kbd>Ctrl Z</kbd></button>
@@ -256,8 +285,11 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
       <button data-cmd="theme">Switch light / dark</button>
     </div></details>
     <details class="menu"><summary>Windows</summary><div class="dd">
+      <button data-cmd="story">Story <kbd>T</kbd></button>
       <button data-cmd="graph">Graph Editor <kbd>G</kbd></button>
-      <button data-cmd="render">Render &amp; playblast…</button>
+      <button data-cmd="film">Film view <kbd>V</kbd></button>
+      <button data-cmd="env">Environment…</button>
+      <button data-cmd="render">Render…</button>
     </div></details>
     <details class="menu"><summary>Help</summary><div class="dd">
       <button data-cmd="shortcuts">Keyboard shortcuts <kbd>?</kbd></button>
@@ -268,7 +300,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
     <button class="btn" id="panelsBtn" data-cmd="panels">Panels</button>
   </header>
 
-  <nav class="shelf" id="shelf" aria-label="Shelf"></nav>
+  <nav class="shelf" id="shelf" aria-label="Shelf"><div class="stabs" id="stabs" role="tablist"></div><div class="sbody" id="sbody"></div></nav>
 
   <aside class="tools" aria-label="Tools">
     <button class="tbtn" data-cmd="tool" data-arg="select" title="Select (Q)" data-help="Select tool (Q): click objects without showing a manipulator. Shift-click adds to the selection."><svg class="i" viewBox="0 0 24 24"><path d="M6 3l13 8-6 1.6L10 19z"/></svg></button>
@@ -290,6 +322,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
           <button data-cmd="view" data-arg="top">Top</button>
           <button data-cmd="view" data-arg="front">Front</button>
           <button data-cmd="view" data-arg="side">Side</button>
+          <button data-cmd="film" title="Look through the shot camera (V)">Film</button>
         </div>
         <div class="seg" id="shadeSeg">
           <button data-cmd="shaded" class="on">Shaded</button>
@@ -298,6 +331,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
       </div>
       <div class="hud" id="hud"></div>
       <div class="camname" id="camName">persp</div>
+      <div class="subs" id="subs"></div>
       <div class="toast" id="toast"></div>
     </main>
     <section class="graph" id="graph" hidden aria-label="Graph Editor">
@@ -315,6 +349,26 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
       </div>
       <div class="gchan" id="gchan"></div>
       <canvas id="gcv" data-help="Graph Editor: drag a key up or down to change its value, sideways to change its frame. Scroll to zoom, right-drag to pan, double-click to fit."></canvas>
+    </section>
+    <section class="graph story" id="storyPanel" hidden aria-label="Story">
+      <div class="gbar">
+        <b>Story</b>
+        <span class="shint" id="sHint">Select a character, then pick actions on the Acting tab. Each action lands at the current frame.</span>
+        <span id="clipEd" hidden class="cled">
+          <b id="ceName"></b>
+          <label>Start <input type="number" id="ceStart" step="1"></label>
+          <label>Length <input type="number" id="ceDur" step="1"></label>
+          <label id="ceExprW">Face <select id="ceExpr"><option value="">Action default</option><option value="neutral">Neutral</option><option value="happy">Happy</option><option value="sad">Sad</option><option value="angry">Angry</option><option value="surprised">Surprised</option></select></label>
+          <label id="ceTalkW"><input type="checkbox" id="ceTalk"> Talking</label>
+          <label id="ceSayW">Line <input type="text" id="ceSay" placeholder="Dialogue, shown as a subtitle" style="width:240px"></label>
+          <label id="ceTurnW">Face direction° <input type="number" id="ceTurn" step="15" placeholder="keep" title="World direction: 0 faces the front view, 90 faces right, -90 left, 180 away"></label>
+          <button class="b" id="cePick">Pick destination</button>
+          <label id="ceClipW">Clip <select id="ceClip"></select></label>
+          <label id="ceLoopW"><input type="checkbox" id="ceLoop"> Loop</label>
+          <button class="b" id="ceDel">Delete clip</button>
+        </span>
+      </div>
+      <canvas id="scv" data-help="Story: drag a clip to move it, drag its right edge to change its length, click the ruler to change frame. Delete removes the selected clip."></canvas>
     </section>
   </div>
 
@@ -341,6 +395,29 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
           <div class="f"><span>Roughness</span><div class="rng"><input type="range" id="fRough" min="0" max="1" step="0.01"><output id="oRough"></output></div></div>
           <div class="f"><span>Metalness</span><div class="rng"><input type="range" id="fMetal" min="0" max="1" step="0.01"><output id="oMetal"></output></div></div>
         </div>
+        <div class="ae-sec" id="charSec">
+          <h4>Character</h4>
+          <label class="f"><span>Species</span><select id="cSpecies"></select></label>
+          <label class="f"><span id="cFurL">Skin</span><input type="color" id="cFur"></label>
+          <div class="f" id="cToneW"><span></span><div class="swatches" id="cTones"></div></div>
+          <label class="f" id="cMuzW"><span>Muzzle</span><input type="color" id="cMuz"></label>
+          <label class="f" id="cHairW"><span>Hair</span><select id="cHair"></select></label>
+          <label class="f" id="cHairCW"><span>Hair color</span><input type="color" id="cHairC"></label>
+          <label class="f"><span>Top</span><input type="color" id="cTop"></label>
+          <label class="f"><span>Bottom</span><input type="color" id="cBot"></label>
+          <label class="f"><span>Clothes</span><select id="cStyle"></select></label>
+          <label class="f"><span>Shoes</span><input type="color" id="cShoes"></label>
+          <div class="f"><span>Size</span><div class="rng"><input type="range" id="cSize" min=".6" max="1.4" step=".01"><output id="oSize"></output></div></div>
+          <div class="hint">Give them actions on the Acting tab. Their clips appear on the Story panel (T).</div>
+        </div>
+        <div class="ae-sec" id="camSec">
+          <h4>Camera</h4>
+          <div class="f"><span>Lens</span><div class="rng"><input type="range" id="kFov" min="12" max="90" step="1"><output id="oFov"></output></div></div>
+          <label class="f"><span>Aim at</span><select id="kAim"></select></label>
+          <div class="f"><span></span><button class="btn" data-cmd="addShot">Add shot at this frame</button></div>
+          <div class="hint">Lens is the vertical field of view in degrees; lower zooms in. Aim at keeps the camera on a character's face.</div>
+        </div>
+        <div class="ae-sec" id="modelSec"><h4>Imported model</h4><div class="hint" id="mInfo"></div></div>
         <div class="ae-sec" id="lightSec">
           <h4>Light</h4>
           <label class="f"><span>Color</span><input type="color" id="fLColor"></label>
@@ -387,11 +464,13 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <script src="vendor/TransformControls.js"></script>
 <script src="vendor/GLTFExporter.js"></script>
 <script src="vendor/OBJExporter.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="vendor/RoomEnvironment.js"></script>
 <script>
 (function(){
 'use strict';
-const APP_VERSION = '0.2.0';
-const BUILD_ID = '20261001-182505-bd1b';
+const APP_VERSION = '0.3.0';
+const BUILD_ID = '20261001-191234-8410';
 const $ = s => document.querySelector(s);
 const DEG = Math.PI/180;
 
@@ -407,7 +486,29 @@ const ICONS = {
   torus:'<ellipse cx="12" cy="12" rx="9.5" ry="6.5"/><ellipse cx="12" cy="12" rx="3.5" ry="2"/><path d="M2.5 12c0 2 1 3.5 2 4.3M21.5 12c0 2-1 3.5-2 4.3"/>',
   plane:'<path d="M2 16l6-7h14l-6 7z"/>',
   light:'<circle cx="12" cy="11" r="4"/><path d="M12 3v2M12 17v2M4 11h2M18 11h2M6.3 5.3l1.4 1.4M16.3 15.3l1.4 1.4M6.3 16.7l1.4-1.4M16.3 6.7l1.4-1.4M10 21h4"/>',
-  group:'<path d="M3 7h7l2 2h9v10H3z"/>'
+  group:'<path d="M3 7h7l2 2h9v10H3z"/>',
+  character:'<circle cx="12" cy="13" r="7"/><circle cx="9.5" cy="12.5" r=".9"/><circle cx="14.5" cy="12.5" r=".9"/><path d="M9.5 15.6c1.4 1 3.6 1 5 0M7 8L6.5 3.5 10 6.5M17 8l.5-4.5L14 6.5"/>',
+  human:'<circle cx="12" cy="13" r="7"/><circle cx="9.5" cy="12.5" r=".9"/><circle cx="14.5" cy="12.5" r=".9"/><path d="M9.5 15.6c1.4 1 3.6 1 5 0M5.5 11c1-4 4-5.5 6.5-5.5S17.5 7 18.5 11"/>',
+  cat:'<circle cx="12" cy="13" r="7"/><path d="M6.5 9L6 3.5l4.5 3M17.5 9l.5-5.5-4.5 3M9 13h.01M15 13h.01M11 16h2M4 15l4-.5M20 15l-4-.5"/>',
+  dog:'<circle cx="12" cy="13" r="6.5"/><path d="M6 8c-3 0-3 6-1 7M18 8c3 0 3 6 1 7M9.5 12.5h.01M14.5 12.5h.01"/><circle cx="12" cy="15.5" r="1.2"/>',
+  bear:'<circle cx="12" cy="13" r="7"/><circle cx="6.5" cy="7" r="2.5"/><circle cx="17.5" cy="7" r="2.5"/><ellipse cx="12" cy="15.5" rx="2.5" ry="1.8"/>',
+  bunny:'<circle cx="12" cy="15" r="6"/><path d="M9.5 9.5C8 6 8.5 2 10 2s2 4 1.5 7.5M14.5 9.5C16 6 15.5 2 14 2s-2 4-1.5 7.5"/>',
+  fox:'<path d="M5 6l3 4h8l3-4 0 7-7 8-7-8z"/><path d="M9.5 13h.01M14.5 13h.01"/>',
+  pig:'<circle cx="12" cy="13" r="7"/><ellipse cx="12" cy="15" rx="3" ry="2"/><path d="M6 8L5 4l4 2M18 8l1-4-4 2"/>',
+  panda:'<circle cx="12" cy="13" r="7"/><circle cx="6.5" cy="7" r="2.3"/><circle cx="17.5" cy="7" r="2.3"/><ellipse cx="9.3" cy="12.5" rx="1.6" ry="2"/><ellipse cx="14.7" cy="12.5" rx="1.6" ry="2"/>',
+  prop:'<circle cx="12" cy="9" r="5"/><path d="M12 14v7"/>',
+  camera:'<rect x="3" y="7" width="13" height="10" rx="1.5"/><path d="M16 11l5-3v8l-5-3"/>',
+  model:'<circle cx="12" cy="5" r="2.5"/><path d="M12 8v7M7 11l5-2 5 2M9 21l3-6 3 6"/>',
+  tree:'<circle cx="12" cy="9" r="5"/><path d="M12 14v7"/>', pine:'<path d="M12 3l6 10H6zM12 13v8"/>',
+  house:'<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/>', bush:'<path d="M4 18a4 4 0 0 1 4-6 4 4 0 0 1 8 0 4 4 0 0 1 4 6z"/>',
+  rock:'<path d="M4 18l3-8 6-3 6 5 1 6z"/>', bench:'<path d="M3 12h18M5 12v6M19 12v6M4 8h16"/>', lamp:'<path d="M12 21V7M9 21h6"/><circle cx="12" cy="5" r="2.5"/>',
+  fence:'<path d="M5 20V6l1.5-2L8 6v14M11 20V6l1.5-2L14 6v14M17 20V6l1.5-2L20 6v14M3 10h19M3 16h19"/>',
+  flowers:'<circle cx="12" cy="8" r="3"/><path d="M12 11v10M12 16c-2 0-4-1-5-3M12 18c2 0 4-1 5-3"/>', ball:'<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c3 3 3 13 0 16"/>',
+  env:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
+  shot:'<rect x="3" y="8" width="18" height="12" rx="1"/><path d="M3 8l2-4 16 0-2 4M8 4l-2 4M13 4l-2 4M18 4l-2 4"/>',
+  film:'<rect x="2" y="6" width="20" height="12" rx="1"/><path d="M6 6v12M18 6v12"/>', importm:'<path d="M12 3v12M7 10l5 5 5-5M4 19h16"/>',
+  audio:'<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>', demo:'<path d="M7 5l12 7-12 7z"/>',
+  render:'<rect x="3" y="6" width="14" height="12" rx="1.5"/><path d="M17 10l4-2v8l-4-2"/>', story:'<path d="M3 6h10M3 12h14M3 18h8"/><circle cx="19" cy="6" r="1.5"/>'
 };
 const svg = (p, cls='i') => `<svg class="${cls}" viewBox="0 0 24 24">${p}</svg>`;
 const EYE = '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>';
@@ -422,27 +523,49 @@ const TYPES = {
   torus:   {label:'Torus',    prefix:'pTorus',    geo:()=>new THREE.TorusGeometry(.5,.18,20,64), y:.68},
   plane:   {label:'Plane',    prefix:'pPlane',    geo:()=>{const g=new THREE.PlaneGeometry(2,2); g.rotateX(-Math.PI/2); return g;}, y:.002},
   light:   {label:'Point light', prefix:'pointLight', geo:null, y:3},
-  group:   {label:'Group', prefix:'group', geo:null, y:0, hidden:true}
+  group:   {label:'Group', prefix:'group', geo:null, y:0, hidden:true},
+  character:{label:'Character', prefix:'char', geo:null, y:0, hidden:true},
+  prop:    {label:'Prop', prefix:'prop', geo:null, y:0, hidden:true},
+  camera:  {label:'Camera', prefix:'camera', geo:null, y:0, hidden:true},
+  model:   {label:'Model', prefix:'model', geo:null, y:0, hidden:true}
 };
 
-const shelf = $('#shelf'), createMenu = $('#createMenu');
-const g1 = document.createElement('div'); g1.className='grp';
-const g2 = document.createElement('div'); g2.className='grp';
+const createMenu = $('#createMenu');
 for(const [k,t] of Object.entries(TYPES)){
   if(t.hidden) continue;
-  const b = document.createElement('button');
-  b.className='sbtn'; b.dataset.cmd='create'; b.dataset.arg=k;
-  b.title = 'Create ' + t.label.toLowerCase();
-  b.dataset.help = k==='light' ? 'Add a point light that casts colored light into the scene.' : `Add a ${t.label.toLowerCase()} at the origin.`;
-  b.innerHTML = svg(ICONS[k]) + `<span>${k==='light'?'Light':t.label}</span>`;
-  (k==='light'?g2:g1).appendChild(b);
   const m = document.createElement('button'); m.dataset.cmd='create'; m.dataset.arg=k; m.textContent=t.label;
   createMenu.appendChild(m);
 }
-const gb = document.createElement('button'); gb.className='sbtn'; gb.dataset.cmd='group'; gb.title='Group selection (Ctrl G)';
-gb.dataset.help='Group (Ctrl G): put the selected objects under a new group you can move and animate as one.';
-gb.innerHTML = svg(ICONS.group) + '<span>Group</span>'; g2.appendChild(gb);
-shelf.append(g1,g2);
+let shelfTab = 'Create';
+function shelfButton(cmd, arg, icon, label, help, cls){
+  const b = document.createElement('button'); b.className = 'sbtn' + (cls ? ' ' + cls : ''); b.dataset.cmd = cmd; if(arg) b.dataset.arg = arg;
+  b.title = label; b.dataset.help = help;
+  b.innerHTML = (icon ? svg(icon) : '') + `<span>${label}</span>`; return b;
+}
+function buildShelf(){
+  const tabs = {
+    Create: () => [...Object.entries(TYPES).filter(([k,t]) => !t.hidden).map(([k,t]) => shelfButton('create', k, ICONS[k], k==='light'?'Light':t.label, k==='light' ? 'Add a point light that casts colored light into the scene.' : `Add a ${t.label.toLowerCase()} at the origin.`)),
+      shelfButton('group', null, ICONS.group, 'Group', 'Group (Ctrl G): put the selected objects under a new group you can move and animate as one.')],
+    Characters: () => Object.entries(SPECIES).map(([k,v]) => shelfButton('char', k, ICONS[k], v.label, `Add a little ${v.label.toLowerCase()} character with a face, clothes and a rig ready for acting.`)),
+    Acting: () => Object.entries(ACTIONS).map(([k,a]) => { const b = shelfButton('act', k, null, a.label, a.loco ? `${a.label}: then click the ground to choose where the selected character goes.` : `${a.label}: adds this action to the selected character at the current frame.`, 'act'); const i = document.createElement('i'); i.style.background = CAT_COLOR[a.cat]; b.prepend(i); return b; }),
+    Set: () => [...Object.entries(PROPS).map(([k,v]) => shelfButton('prop', k, ICONS[k], v.label, `Add a ${v.label.toLowerCase()} where the camera is looking.`)),
+      shelfButton('env', null, ICONS.env, 'Environment', 'Environment: sky, ground, sun and time-of-day presets.', 'wide')],
+    Camera: () => [shelfButton('camView', null, ICONS.camera, 'Camera from view', 'Camera from view: place a movie camera exactly where you are looking now.', 'wide'),
+      shelfButton('addShot', null, ICONS.shot, 'Add shot', 'Add shot: cut to the selected camera from the current frame.', 'wide'),
+      shelfButton('film', null, ICONS.film, 'Film view', 'Film view (V): see the movie through the shot cameras, with subtitles and framing.', 'wide'),
+      shelfButton('story', null, ICONS.story, 'Story panel', 'Story panel (T): every character\'s clips, camera shots and audio on one timeline.', 'wide'),
+      shelfButton('render', null, ICONS.render, 'Render', 'Render: stills, playblasts and finished MP4 movies with sound.', 'wide')],
+    Media: () => [shelfButton('importModel', null, ICONS.importm, 'Import model', 'Import a rigged GLB character (for example from Mixamo) with its animations.', 'wide'),
+      shelfButton('importAudio', null, ICONS.audio, 'Add audio', 'Add music or recorded dialogue at the current frame. It plays in sync and goes into the MP4.', 'wide'),
+      shelfButton('demo', null, ICONS.demo, 'Demo movie', 'Open the demo movie: three characters, a little set and two cameras.', 'wide')]
+  };
+  const st = $('#stabs'), sb = $('#sbody'); st.innerHTML = ''; sb.innerHTML = '';
+  for(const name of Object.keys(tabs)){
+    const t = document.createElement('button'); t.className = 'stab' + (name === shelfTab ? ' on' : ''); t.textContent = name; t.setAttribute('role','tab');
+    t.onclick = () => { shelfTab = name; buildShelf(); }; st.appendChild(t);
+  }
+  tabs[shelfTab]().forEach(b => sb.appendChild(b));
+}
 
 /* ---------- three setup ---------- */
 const viewEl = $('#view');
@@ -462,7 +585,7 @@ const orbit = new THREE.OrbitControls(camera, renderer.domElement);
 orbit.enableDamping = true; orbit.dampingFactor = 0.14;
 orbit.target.set(0, .6, 0); orbit.update();
 
-scene.add(new THREE.HemisphereLight(0xdfe8f2, 0x3a3530, 0.6));
+const hemi = new THREE.HemisphereLight(0xdfe8f2, 0x5a5048, 0.45); scene.add(hemi);
 const keyLight = new THREE.DirectionalLight(0xffffff, 0.95);
 keyLight.position.set(6, 10, 5); keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
@@ -533,9 +656,11 @@ function makeObject(d){
     mesh = new THREE.Mesh(new THREE.SphereGeometry(.13, 20, 10), mat);
     const pl = new THREE.PointLight(0xffffff, d.intensity ?? 1.2, 0, 2);
     setMatColor(pl, d.color);
-    mesh.add(pl); mesh.userData.isLight = true;
+    mesh.add(pl); mesh.userData.isLight = true; mesh.userData.lightProxy = true;
   } else if(d.type === 'group'){
     mesh = locatorMesh();
+  } else if(['character','prop','camera','model'].includes(d.type)){
+    mesh = new THREE.Group();
   } else {
     const mat = new THREE.MeshStandardMaterial({roughness:d.rough ?? .55, metalness:d.metal ?? 0, wireframe:wire});
     setMatColor(mat, d.color);
@@ -550,6 +675,10 @@ function makeObject(d){
              keys: d.keys ? JSON.parse(JSON.stringify(d.keys)) : {}};
   objOf.set(mesh, o);
   scene.add(mesh); objects.push(o);
+  if(o.type === 'character'){ o.char = Object.assign(defaultChar((d.char && d.char.species) || 'human'), d.char || {}); buildCharacter(o); }
+  if(o.type === 'prop'){ o.prop = Object.assign({kind:'tree'}, d.prop || {}); (PROPS[o.prop.kind] || PROPS.rock).build(o.mesh); }
+  if(o.type === 'camera'){ o.cam = Object.assign({fov:40, aim:null}, d.cam || {}); buildCamera(o); }
+  if(o.type === 'model'){ o.asset = d.asset; o.clips = []; buildModel(o); }
   return o;
 }
 function linkParent(o, pid){
@@ -562,6 +691,7 @@ function descendants(o){ const out = []; const walk = x => children(x).forEach(c
 function isAncestor(a, o){ let p = o.parent != null ? byId(o.parent) : null; while(p){ if(p === a) return true; p = p.parent != null ? byId(p.parent) : null; } return false; }
 const topSelected = () => sel.filter(o => !sel.some(a => a !== o && isAncestor(a, o)));
 
+function ownerOf(n){ while(n){ const o = objOf.get(n); if(o) return o; n = n.parent; } return null; }
 function disposeMesh(m){
   m.traverse(n => { if(n.geometry && !n.userData.sharedGeo) n.geometry.dispose(); if(n.material && n.material !== selMat && n.material !== selMat2 && n.material.dispose) n.material.dispose(); });
 }
@@ -572,6 +702,8 @@ function removeObjects(list){
   for(const o of list){ o.mesh.parent && o.mesh.parent.remove(o.mesh); }
   for(const o of list) disposeMesh(o.mesh);
   objects = objects.filter(o => !set.has(o));
+  if(typeof story !== 'undefined'){ story.clips = story.clips.filter(c => !list.some(o => o.id === c.obj)); if(selClip != null && !clipById(selClip)) selClip = null; }
+  for(const o of objects) if(o.cam && list.some(x => x.id === o.cam.aim)) o.cam.aim = null;
 }
 function uniqueName(prefix){
   let n = 1; const names = new Set(objects.map(o=>o.name));
@@ -583,9 +715,11 @@ const trs = m => ({p:m.position.toArray(), r:[m.rotation.x, m.rotation.y, m.rota
 /* ---------- serialization / history ---------- */
 function objData(o){
   return {id:o.id, name:o.name, type:o.type, parent:o.parent, color:o.color, rough:o.rough, metal:o.metal,
-          intensity:o.intensity, interp:o.interp, visible:o.mesh.visible, ...trs(o.mesh), keys:o.keys};
+          intensity:o.intensity, interp:o.interp, visible:o.mesh.visible, ...trs(o.mesh), keys:o.keys,
+          char:o.char, prop:o.prop, cam:o.cam, asset:o.asset};
 }
-function snapshot(){ return {app:'minimaya', v:2, nextId, frame, start, end, fps, objects: objects.map(objData)}; }
+function snapshot(){ return {app:'minimaya', v:3, nextId, frame, start, end, fps, objects: objects.map(objData),
+  story: JSON.parse(JSON.stringify(story, (k, v) => k.startsWith('_') ? undefined : v)), env:Object.assign({}, env), movie:Object.assign({}, movie), rset:Object.assign({}, rset)}; }
 const serialize = () => JSON.stringify(snapshot());
 function persist(s){ try{ localStorage.setItem('miniMaya.scene', s); }catch(e){} }
 function commit(){
@@ -608,9 +742,15 @@ function restore(s){
   nextId = Math.max(d.nextId || 1, ...objects.map(o=>o.id+1), 1);
   start = d.start ?? 1; end = d.end ?? 120; frame = d.frame ?? start; fps = d.fps ?? 24;
   $('#fFps').value = String(fps);
+  story = d.story ? JSON.parse(JSON.stringify(d.story)) : {clips:[], audio:null};
+  if(selClip != null && !clipById(selClip)) selClip = null;
+  env = Object.assign({}, ENV0, d.env || {}); applyEnv();
+  if(d.movie) Object.assign(movie, d.movie); if(d.rset) Object.assign(rset, d.rset);
+  const aa = story.audio ? story.audio.asset : null; if(aa !== loadedAudio){ loadedAudio = aa; loadAudio(); }
   setSelection(selIds.map(byId).filter(Boolean), true);
-  syncTime(); refreshAll();
+  applyFrame(); syncTime(); refreshAll();
 }
+let loadedAudio = null;
 function undo(){ if(history.length < 2) return toast('Nothing to undo'); redoStack.push(history.pop()); restore(history[history.length-1]); persist(history[history.length-1]); toast('Undo'); }
 function redo(){ if(!redoStack.length) return toast('Nothing to redo'); const s = redoStack.pop(); history.push(s); restore(s); persist(s); toast('Redo'); }
 
@@ -620,6 +760,15 @@ function clearOverlays(){
   overlays = [];
 }
 function addOverlay(o, mat){
+  if(['character','prop','camera','model'].includes(o.type)){
+    o.mesh.traverse(n => {
+      if(!n.isMesh || n.isSkinnedMesh || n.userData.helper || ownerOf(n) !== o) return;
+      const ov = new THREE.Mesh(n.geometry, mat); ov.scale.setScalar(1.004); ov.raycast = () => {}; ov.userData.helper = true;
+      n.add(ov); overlays.push(ov);
+    });
+    if(o.type === 'model' && overlays.length === 0){ const bh = new THREE.BoxHelper(o.mesh, 0xf0b44c); bh.userData.helper = true; bh.userData.own = true; bh.raycast = () => {}; scene.add(bh); overlays.push(bh); }
+    return;
+  }
   const targets = o.type === 'group' ? descendants(o).filter(d => d.type !== 'group') : [o];
   for(const t of targets){
     let ov;
@@ -691,18 +840,20 @@ function onTransformEnd(){ autoKeyMaybe(); commit(); refreshAttrs(); drawTimelin
 
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 let downAt = null;
-renderer.domElement.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY, e.button]; });
+renderer.domElement.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY, e.button]; focusArea = 'view'; });
 renderer.domElement.addEventListener('pointerup', e => {
   const d = downAt; downAt = null;
   if(gizmoUsed){ gizmoUsed = false; return; }
   if(!d || d[2] !== 0) return;
   if((e.clientX-d[0])**2 + (e.clientY-d[1])**2 > 25) return;
+  if(pickTarget){ finishPick(groundPoint(e)); return; }
+  if(filmMode) return;
   const r = renderer.domElement.getBoundingClientRect();
   ndc.set((e.clientX-r.left)/r.width*2-1, -(e.clientY-r.top)/r.height*2+1);
   ray.setFromCamera(ndc, camera);
   const pickable = objects.filter(o => o.type !== 'group' && isShown(o)).map(o => o.mesh);
-  const hits = ray.intersectObjects(pickable, false);
-  select(hits.length ? objOf.get(hits[0].object) : null, e.shiftKey || e.ctrlKey || e.metaKey);
+  const hits = ray.intersectObjects(pickable, true).filter(h => h.object.visible);
+  select(hits.length ? ownerOf(hits[0].object) : null, e.shiftKey || e.ctrlKey || e.metaKey);
 });
 renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
 function isShown(o){ let m = o.mesh; while(m && m !== scene){ if(!m.visible) return false; m = m.parent; } return true; }
@@ -778,6 +929,7 @@ function groupCmd(){
 }
 function newScene(){
   removeObjects(objects.slice()); setSelection([], true);
+  story = {clips:[], audio:null}; selClip = null; loadedAudio = null; loadAudio(); if(filmMode) setFilm(false);
   frame = start = 1; end = 120; studioName = null;
   syncTime(); refreshAll(); commit();
   toast('New scene. Undo brings the old one back.');
@@ -801,6 +953,7 @@ function frameObjects(list){
 }
 const VIEWS = {persp:[1,.75,1.3], top:[0,1,.0001], front:[0,0,1], side:[1,0,0]};
 function setView(v){
+  if(filmMode) setFilm(false);
   const dist = camera.position.distanceTo(orbit.target);
   flyTo(orbit.target.clone().add(new THREE.Vector3(...VIEWS[v]).normalize().multiplyScalar(dist)), orbit.target.clone());
   document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on', b.dataset.arg===v));
@@ -812,7 +965,7 @@ orbit.addEventListener('start', () => {
 });
 function setWire(on){
   wire = on;
-  objects.forEach(o => { if(o.mesh.isMesh && o.type !== 'light') o.mesh.material.wireframe = on; });
+  objects.forEach(o => o.mesh.traverse(n => { if(n.isMesh && n.material && n.material.isMeshStandardMaterial && !n.userData.helper) n.material.wireframe = on; }));
   document.querySelectorAll('#shadeSeg button').forEach(b=>b.classList.toggle('on', (b.dataset.cmd==='wire')===on));
 }
 
@@ -838,7 +991,7 @@ function evalObj(o, t){
   const p = v('p'), r = v('r'), s = v('s');
   o.mesh.position.set(p[0],p[1],p[2]); o.mesh.rotation.set(r[0],r[1],r[2]); o.mesh.scale.set(s[0],s[1],s[2]);
 }
-function applyFrame(){ objects.forEach(o => evalObj(o, frame)); refreshAttrs(true); }
+function applyFrame(){ objects.forEach(o => evalObj(o, frame)); evalStory(frame); refreshAttrs(true); }
 function goFrame(f){
   frame = Math.round(Math.min(end, Math.max(start, f)));
   applyFrame(); syncTime(); drawTimeline();
@@ -855,6 +1008,7 @@ function togglePlay(){
   $('#playBtn').innerHTML = svg(playing ? PAUSE : PLAY);
   $('#playBtn').classList.toggle('on', playing);
   if(playing && frame >= end) goFrame(start);
+  syncAudio();
 }
 function keyCmd(){
   if(!sel.length) return toast('Select an object to key');
@@ -980,11 +1134,14 @@ function refreshAttrs(live){
     if(inp !== a) inp.value = fmt(getChannel(c,i));
     inp.classList.toggle('keyed', keyed); inp.classList.toggle('animated', animated && !keyed);
   });
-  $('#matSec').hidden = o.type === 'light' || o.type === 'group';
+  const prim = !['light','group','character','prop','camera','model'].includes(o.type);
+  $('#matSec').hidden = !prim;
   $('#lightSec').hidden = o.type !== 'light';
+  $('#charSec').hidden = o.type !== 'character'; $('#camSec').hidden = o.type !== 'camera'; $('#modelSec').hidden = o.type !== 'model';
+  if(!live) fillTypeSections(o);
   if(!live){
     if(o.type === 'light'){ $('#fLColor').value = o.color; $('#fInt').value = o.intensity; $('#oInt').textContent = o.intensity.toFixed(2); }
-    else if(o.type !== 'group'){ $('#fColor').value = o.color; $('#fRough').value = o.rough; $('#oRough').textContent = o.rough.toFixed(2);
+    else if(prim){ $('#fColor').value = o.color; $('#fRough').value = o.rough; $('#oRough').textContent = o.rough.toFixed(2);
            $('#fMetal').value = o.metal; $('#oMetal').textContent = o.metal.toFixed(2); }
   }
 }
@@ -995,7 +1152,48 @@ $('#fName').addEventListener('change', e => {
   else if(v) toast('That name is taken');
   commit(); refreshOutliner(); refreshAttrs();
 });
-const matTargets = () => sel.filter(o => o.type !== 'light' && o.type !== 'group');
+const matTargets = () => sel.filter(o => !['light','group','character','prop','camera','model'].includes(o.type));
+function fillTypeSections(o){
+  if(o.type === 'character'){
+    const c = o.char, human = c.species === 'human';
+    $('#cSpecies').value = c.species; $('#cFur').value = c.fur; $('#cFurL').textContent = human ? 'Skin' : 'Fur';
+    $('#cToneW').hidden = !human; $('#cMuzW').hidden = human || !SPECIES[c.species].muzzle; $('#cMuz').value = c.muzzle || c.fur;
+    $('#cHairW').hidden = $('#cHairCW').hidden = !human; $('#cHair').value = c.hair; $('#cHairC').value = c.hairColor;
+    $('#cTop').value = c.top; $('#cBot').value = c.bottom; $('#cStyle').value = c.style; $('#cShoes').value = c.shoes;
+    $('#cSize').value = c.size; $('#oSize').textContent = (+c.size).toFixed(2);
+  }
+  if(o.type === 'camera'){
+    $('#kFov').value = o.cam.fov; $('#oFov').textContent = o.cam.fov + '°';
+    const k = $('#kAim'); k.innerHTML = '<option value="">Nothing (free)</option>' + objects.filter(x => x !== o && !['camera','light','group'].includes(x.type)).map(x => `<option value="${x.id}">${x.name}</option>`).join('');
+    k.value = o.cam.aim != null ? String(o.cam.aim) : '';
+  }
+  if(o.type === 'model'){
+    $('#mInfo').textContent = o.loadError ? o.loadError : `${o.asset}. ${o.clips.length ? o.clips.length + ' animation' + (o.clips.length > 1 ? 's' : '') + ': ' + o.clips.map(k => k.name).join(', ') : 'Loading, or no animations in the file'}. Use Walk to, Run to and Play animation from the Acting tab; pick the clip on the Story panel.`;
+  }
+}
+function initCharUI(){
+$('#cSpecies').innerHTML = Object.entries(SPECIES).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+$('#cHair').innerHTML = Object.entries(HAIRS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+$('#cStyle').innerHTML = Object.entries(STYLES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+$('#cTones').innerHTML = SKIN_TONES.map(c => `<button class="sw" style="background:${c}" data-tone="${c}" title="Skin tone ${c}" aria-label="Skin tone ${c}"></button>`).join('');
+}
+function charEdit(fn, save){
+  const o = primary(); if(!o || o.type !== 'character') return;
+  fn(o.char); buildCharacter(o); evalCharacter(o, frame); setSelection(sel.slice(), true);
+  if(save){ commit(); refreshAttrs(); }
+}
+const charField = (id, key, num) => {
+  $(id).addEventListener('input', e => charEdit(c => { c[key] = num ? +e.target.value : e.target.value; }));
+  $(id).addEventListener('change', e => charEdit(c => { c[key] = num ? +e.target.value : e.target.value; }, true));
+};
+charField('#cFur','fur'); charField('#cMuz','muzzle'); charField('#cHair','hair'); charField('#cHairC','hairColor'); charField('#cTop','top');
+charField('#cBot','bottom'); charField('#cStyle','style'); charField('#cShoes','shoes'); charField('#cSize','size', true);
+$('#cSize').addEventListener('input', e => { $('#oSize').textContent = (+e.target.value).toFixed(2); });
+$('#cSpecies').addEventListener('change', e => charEdit(c => { const sp = SPECIES[e.target.value]; c.species = e.target.value; c.fur = sp.fur; c.muzzle = sp.muzzle || sp.fur; c.hair = c.species === 'human' ? (c.hair === 'none' ? 'short' : c.hair) : 'none'; }, true));
+$('#cTones').addEventListener('click', e => { const t = e.target.closest('[data-tone]'); if(t) charEdit(c => { c.fur = t.dataset.tone; }, true); });
+$('#kFov').addEventListener('input', e => { const o = primary(); if(o && o.cam){ o.cam.fov = +e.target.value; $('#oFov').textContent = o.cam.fov + '°'; } });
+$('#kFov').addEventListener('change', commit);
+$('#kAim').addEventListener('change', e => { const o = primary(); if(o && o.cam){ o.cam.aim = e.target.value ? +e.target.value : null; applyFrame(); commit(); } });
 $('#fColor').addEventListener('input', e => matTargets().forEach(o => { o.color = e.target.value; setMatColor(o.mesh.material, o.color); }));
 $('#fRough').addEventListener('input', e => { matTargets().forEach(o => { o.rough = +e.target.value; o.mesh.material.roughness = o.rough; }); $('#oRough').textContent = (+e.target.value).toFixed(2); });
 $('#fMetal').addEventListener('input', e => { matTargets().forEach(o => { o.metal = +e.target.value; o.mesh.material.metalness = o.metal; }); $('#oMetal').textContent = (+e.target.value).toFixed(2); });
@@ -1016,7 +1214,7 @@ function fitCanvas(cv, ctx){
   return [w,h];
 }
 function drawTimeline(){
-  drawGraph();
+  drawGraph(); drawStory();
   const sz = fitCanvas(tl, tctx); if(!sz) return;
   const [w,h] = sz;
   tctx.fillStyle = css('--tl-bg'); tctx.fillRect(0,0,w,h);
@@ -1254,7 +1452,7 @@ gcv.addEventListener('wheel', e => {
            v0: zv ? v + (gView.v0-v)*k : gView.v0, v1: zv ? v + (gView.v1-v)*k : gView.v1};
   drawGraph();
 }, {passive:false});
-function toggleGraph(force){
+function toggleGraphOld(force){
   const show = force ?? graphEl.hidden;
   graphEl.hidden = !show;
   $('#graphBtn').classList.toggle('on', show); $('#graphBtn2').classList.toggle('on', show);
@@ -1299,7 +1497,7 @@ function exportRoot(){
   const root = new THREE.Group(); root.name = 'MiniMayaScene';
   objects.filter(o => o.parent == null).forEach(o => {
     const c = o.mesh.clone(true);
-    const strip = []; c.traverse(n => { if(n.userData.helper) strip.push(n); });
+    const strip = []; c.traverse(n => { if(n.userData.helper || n.userData.viewOnly) strip.push(n); });
     strip.forEach(n => n.parent && n.parent.remove(n));
     root.add(c);
   });
@@ -1340,99 +1538,972 @@ function exportOBJ(){
   saveFile(`${baseName()}-${stamp()}.obj`, new Blob([txt], {type:'text/plain'}));
 }
 
-let rr = null;
-function offRenderer(){
-  if(rr) return rr;
-  rr = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
-  rr.shadowMap.enabled = true; rr.shadowMap.type = THREE.PCFSoftShadowMap; rr.outputEncoding = THREE.sRGBEncoding;
-  rr.domElement.style.cssText = 'position:fixed;left:-10000px;top:0;pointer-events:none';
-  document.body.appendChild(rr.domElement);
-  return rr;
+/* ===================== v0.3: characters, sets, cameras, story, movie ===================== */
+const clamp = (v, a=0, b=1) => Math.min(b, Math.max(a, v));
+const smooth = u => { u = clamp(u); return u*u*(3-2*u); };
+const lerp = (a, b, t) => a + (b-a)*t;
+const lerpAngle = (a, b, t) => { const d = ((b - a + Math.PI) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI) - Math.PI; return a + d*t; };
+const { sin, cos, abs } = Math;
+function STD(hex, rough=.62, metal=0){ const m = new THREE.MeshStandardMaterial({roughness:rough, metalness:metal, wireframe:wire, envMapIntensity:.4}); setMatColor(m, hex); return m; }
+function shade(hex, k){ const c = new THREE.Color(hex); c.r = Math.min(1, c.r*k); c.g = Math.min(1, c.g*k); c.b = Math.min(1, c.b*k); return '#' + c.getHexString(); }
+function capsuleGeo(r, len, seg=18){
+  const pts = [], n = 8;
+  for(let i = 0; i <= n; i++){ const a = -Math.PI/2 + (i/n)*(Math.PI/2); pts.push(new THREE.Vector2(Math.max(1e-4, cos(a)*r), sin(a)*r - len)); }
+  for(let i = 1; i <= n; i++){ const a = (i/n)*(Math.PI/2); pts.push(new THREE.Vector2(Math.max(1e-4, cos(a)*r), sin(a)*r)); }
+  const g = new THREE.LatheGeometry(pts, seg); g.translate(0, -r, 0); g.computeVertexNormals(); return g;
 }
-const rset = {w:1280, h:720, bg:'#3d434a', grid:false};
-function renderTo(w, h){
-  const r = offRenderer(); r.setPixelRatio(1); r.setSize(w, h, false);
-  r.setClearColor(new THREE.Color(rset.bg), 1);
-  const cam = camera.clone(); cam.aspect = w/h; cam.updateProjectionMatrix();
-  withCleanScene(() => { grid.visible = rset.grid; r.render(scene, cam); });
-  return r.domElement;
+const centeredCapsule = (r, len, seg) => capsuleGeo(r, len, seg).translate(0, (len + 2*r)/2, 0);
+
+/* ----- environment: sky, ground, image-based light ----- */
+const ENV0 = {sky:true, top:'#7fb1e3', horizon:'#e3edf2', ground:'#7ea65e', groundOn:true, sunEl:50, sunAz:35, sun:1.15, amb:.32};
+let env = Object.assign({}, ENV0);
+const skyMat = new THREE.ShaderMaterial({side:THREE.BackSide, depthWrite:false,
+  uniforms:{top:{value:new THREE.Color()}, hor:{value:new THREE.Color()}, gnd:{value:new THREE.Color()}},
+  vertexShader:'varying vec3 vp; void main(){ vp = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader:'uniform vec3 top; uniform vec3 hor; uniform vec3 gnd; varying vec3 vp; void main(){ float h = vp.y; vec3 c = h > 0.0 ? mix(hor, top, pow(clamp(h, 0.0, 1.0), 0.55)) : mix(hor, gnd, clamp(-h * 5.0, 0.0, 1.0)); gl_FragColor = linearToOutputTexel(vec4(c, 1.0)); }'});
+const sky = new THREE.Mesh(new THREE.SphereGeometry(280, 32, 16), skyMat);
+sky.frustumCulled = false; sky.renderOrder = -10; sky.userData.envPart = true; scene.add(sky);
+const groundMesh = new THREE.Mesh(new THREE.CircleGeometry(70, 72), STD('#8dbb6a', .95));
+groundMesh.rotation.x = -Math.PI/2; groundMesh.position.y = -0.003; groundMesh.receiveShadow = true; groundMesh.userData.envPart = true;
+scene.add(groundMesh);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+function applyEnv(){
+  sky.visible = !!env.sky;
+  skyMat.uniforms.top.value.set(env.top).convertSRGBToLinear();
+  skyMat.uniforms.hor.value.set(env.horizon).convertSRGBToLinear();
+  skyMat.uniforms.gnd.value.set(env.ground).convertSRGBToLinear();
+  groundMesh.visible = !!env.groundOn; setMatColor(groundMesh.material, env.ground);
+  catcher.visible = !env.groundOn;
+  const el = env.sunEl*DEG, az = env.sunAz*DEG;
+  keyLight.position.set(cos(el)*sin(az)*14, sin(el)*14, cos(el)*cos(az)*14);
+  keyLight.intensity = env.sun; hemi.intensity = env.amb;
+  viewEl.classList.toggle('skyon', !!env.sky);
 }
-let pbRec = null;
+
+/* ----- characters ----- */
+const SPECIES = {
+  human:{label:'Human', fur:'#d29a6e', ears:'human', tail:null},
+  cat:  {label:'Cat',   fur:'#e8a15a', muzzle:'#fbeee0', ears:'cat',   nose:'#e48a9a', tail:'cat', whiskers:true},
+  dog:  {label:'Dog',   fur:'#b98457', muzzle:'#f2e2cf', ears:'dog',   nose:'#2a2220', tail:'dog'},
+  bear: {label:'Bear',  fur:'#8a5a3b', muzzle:'#d8b48c', ears:'round', nose:'#2a2220', tail:'stub'},
+  bunny:{label:'Bunny', fur:'#f1ece6', muzzle:'#ffffff', ears:'bunny', nose:'#f08aa0', tail:'puff', teeth:true},
+  fox:  {label:'Fox',   fur:'#e0712c', muzzle:'#fff5ea', ears:'fox',   nose:'#2a2220', tail:'fox'},
+  pig:  {label:'Pig',   fur:'#f3b0b5', ears:'pig',   tail:'curl', snout:true},
+  panda:{label:'Panda', fur:'#f4f4f2', muzzle:'#ffffff', ears:'panda', nose:'#2a2220', tail:'stub', patches:true}
+};
+const HAIRS = {short:'Short', bob:'Bob', long:'Long', ponytail:'Ponytail', bun:'Bun', spiky:'Spiky', none:'None'};
+const STYLES = {pants:'Pants', shorts:'Shorts', skirt:'Skirt'};
+const SKIN_TONES = ['#f3d2b8','#e6b48f','#d29a6e','#b97b52','#9a6240','#7a4a2f','#5c3622','#3f2518'];
+const OUTFITS = [['#e8553f','#3b5aa8'],['#4f7fd6','#36415a'],['#2f8f83','#e9d8a6'],['#f2c14e','#5a4b8a'],['#8a5bd6','#2d2d36'],['#ffffff','#c0392b']];
+function defaultChar(species){
+  const sp = SPECIES[species] || SPECIES.human, k = objects.filter(o => o.type === 'character').length;
+  const [top, bottom] = OUTFITS[k % OUTFITS.length];
+  return {species, fur:sp.fur, muzzle:sp.muzzle || sp.fur, top, bottom, shoes:'#2d2a2a', style: species === 'human' && k % 2 ? 'skirt' : 'pants',
+          hair: species === 'human' ? ['short','ponytail','bob','spiky','bun','long'][k % 6] : 'none', hairColor:'#2b1d14', size:1};
+}
+function buildCharacter(o){
+  if(o.rig){ o.mesh.remove(o.rig.mover); disposeMesh(o.rig.mover); }
+  const c = o.char, sp = SPECIES[c.species] || SPECIES.human, human = c.species === 'human';
+  const fur = STD(c.fur), muz = STD(c.muzzle || c.fur), top = STD(c.top), bot = STD(c.bottom), shoe = STD(c.shoes, .45);
+  const dark = STD('#1b1716', .25), white = STD('#fbfbf8', .3), pink = STD('#f2a3b3', .6);
+  const browM = STD(human ? c.hairColor : shade(c.fur, .45));
+  const mover = new THREE.Group(); o.mesh.add(mover);
+  const root = new THREE.Group(); root.scale.setScalar(c.size || 1); mover.add(root);
+  const J = {}, face = {};
+  const joint = (n, parent, x=0, y=0, z=0) => { const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g); J[n] = g; return g; };
+  const part = (geo, mat, parent, x=0, y=0, z=0, sx=1, sy=1, sz=1) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); m.castShadow = m.receiveShadow = true; parent.add(m); return m; };
+  const sph = (r, ws=24, hs=16) => new THREE.SphereGeometry(r, ws, hs);
+  const L = .44;
+  const hips = joint('hips', root, 0, L, 0);
+  part(sph(.165), bot, hips, 0, .03, 0, 1.02, .62, .9);
+  for(const [s, sx] of [['L',1],['R',-1]]){
+    const th = joint('th'+s, hips, .085*sx, 0, 0);
+    part(capsuleGeo(.07, .08), bot, th);
+    const kn = joint('kn'+s, th, 0, -.2, 0);
+    part(capsuleGeo(.062, .076), c.style === 'pants' ? bot : fur, kn);
+    const an = joint('an'+s, kn, 0, -.2, 0);
+    part(sph(.072), shoe, an, 0, -.02, .045, 1, .6, 1.55);
+  }
+  if(c.style === 'skirt'){ const sk = part(new THREE.CylinderGeometry(.15, .26, .24, 28, 1, true), bot, hips, 0, -.07, 0); sk.material = bot.clone(); sk.material.side = THREE.DoubleSide; }
+  const spine = joint('spine', hips, 0, .02, 0);
+  part(capsuleGeo(.165, .07), top, spine, 0, .38, 0, 1.08, 1, .9);
+  const chest = joint('chest', spine, 0, .3, 0);
+  for(const [s, sx] of [['L',1],['R',-1]]){
+    const sh = joint('sh'+s, chest, .2*sx, .02, 0);
+    part(sph(.07), top, sh);
+    part(capsuleGeo(.056, .066), top, sh);
+    const el = joint('el'+s, sh, 0, -.17, 0);
+    part(capsuleGeo(.05, .06), fur, el);
+    part(sph(.064), fur, el, 0, -.18, .005, 1, 1.05, .9);
+  }
+  const neck = joint('neck', chest, 0, .07, 0);
+  part(new THREE.CylinderGeometry(.06, .07, .08, 16), fur, neck, 0, .02, 0);
+  const head = joint('head', neck, 0, .05, 0);
+  const R = .3, hy = .27;
+  part(sph(R, 40, 28), fur, head, 0, hy, 0, 1, .96, .96);
+  if(sp.patches) for(const sx of [1,-1]){ const p = part(sph(.075), dark, head, .11*sx, hy+.02, .237, 1, 1.25, .45); p.rotation.z = .5*sx; }
+  const eye = sx => {
+    const g = new THREE.Group(); g.position.set(.105*sx, hy+.035, .25); head.add(g);
+    part(sph(.062), white, g, 0, 0, 0, 1, 1.18, .5);
+    part(sph(.036), dark, g, 0, -.005, .026, 1, 1.1, .6);
+    const hl = part(sph(.011, 8, 6), white, g, .014, .018, .045); hl.castShadow = false;
+    return g;
+  };
+  face.eyeL = eye(1); face.eyeR = eye(-1);
+  const brow = sx => {
+    const g = new THREE.Group(); g.position.set(.105*sx, hy+.125, .245); head.add(g);
+    const b = part(centeredCapsule(.013, .045, 8), browM, g); b.rotation.z = Math.PI/2; b.castShadow = false;
+    return g;
+  };
+  face.browL = brow(1); face.browR = brow(-1); face.browY = hy + .125;
+  let mouthY = hy - .1, mouthZ = .277;
+  if(human){
+    part(sph(.032), STD(shade(c.fur, .9)), head, 0, hy-.02, .29);
+    for(const sx of [1,-1]) part(sph(.055), fur, head, .29*sx, hy, 0, .45, .9, .75);
+  } else if(sp.snout){
+    const sn = part(new THREE.CylinderGeometry(.08, .085, .07, 24), STD(shade(c.fur, .88)), head, 0, hy-.05, .29); sn.rotation.x = Math.PI/2;
+    for(const sx of [1,-1]) part(sph(.016), dark, head, .03*sx, hy-.05, .326, 1, 1.4, .4);
+    mouthY = hy - .14; mouthZ = .255;
+  } else {
+    const pointy = c.species === 'fox';
+    part(sph(.12), muz, head, 0, hy-.06, pointy ? .25 : .22, 1.15, .78, pointy ? 1.25 : .9);
+    part(sph(.034), STD(sp.nose, .35), head, 0, hy-.02, pointy ? .39 : .33, 1.25, .9, .9);
+    mouthY = hy - .105; mouthZ = pointy ? .37 : .31;
+    if(sp.whiskers){
+      const pts = [];
+      for(const sx of [1,-1]) for(const dy of [-.025, 0, .025]) pts.push(new THREE.Vector3(.07*sx, hy-.06, .31), new THREE.Vector3(.22*sx, hy-.06+dy*1.6, .27));
+      const w = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color:0x3a302c}));
+      head.add(w);
+    }
+    if(sp.teeth) part(new THREE.BoxGeometry(.04, .035, .012), white, head, 0, mouthY-.025, mouthZ-.004);
+  }
+  const smileM = STD('#4a1c1c', .5);
+  face.smile = part(new THREE.TorusGeometry(.045, .011, 8, 20, Math.PI), smileM, head, 0, mouthY, mouthZ); face.smile.rotation.z = Math.PI; face.smile.castShadow = false;
+  face.open = part(sph(.05), STD('#5b1d22', .6), head, 0, mouthY-.012, mouthZ-.014, 1, .1, .45); face.open.castShadow = false;
+  const earM = c.species === 'panda' ? dark : fur;
+  for(const sx of [1,-1]){
+    switch(sp.ears){
+      case 'cat': case 'fox': {
+        const big = sp.ears === 'fox';
+        const e = part(new THREE.ConeGeometry(big ? .1 : .085, big ? .22 : .16, 20), fur, head, .16*sx, hy + (big ? .33 : .3), -.02); e.rotation.z = -.32*sx;
+        part(new THREE.ConeGeometry(big ? .06 : .05, big ? .14 : .1, 16), big ? muz : pink, e, 0, -.02, .035, 1, 1, .5);
+        break; }
+      case 'dog': { const e = part(sph(.1), STD(shade(c.fur, .72)), head, .27*sx, hy+.08, -.01, .42, 1.15, .75); e.rotation.z = .22*sx; break; }
+      case 'round': case 'panda': part(sph(.085), earM, head, .2*sx, hy+.24, -.02, 1, 1, .6); break;
+      case 'bunny': {
+        const e = part(centeredCapsule(.055, .2), fur, head, .085*sx, hy+.4, -.02, 1, 1, .55); e.rotation.z = -.12*sx;
+        part(centeredCapsule(.032, .17), pink, e, 0, .01, .025, 1, 1, .4);
+        break; }
+      case 'pig': { const e = part(new THREE.ConeGeometry(.08, .13, 16), fur, head, .17*sx, hy+.26, .04); e.rotation.set(.7, 0, -.4*sx); break; }
+    }
+  }
+  if(human && c.hair !== 'none'){
+    const hm = STD(c.hairColor, .7);
+    const cap = (th, tilt) => { const m = part(new THREE.SphereGeometry(R*1.06, 40, 20, 0, Math.PI*2, 0, Math.PI*th), hm, head, 0, hy, 0, 1, .98, 1); m.rotation.x = tilt; return m; };
+    if(['short','ponytail','bun','spiky'].includes(c.hair)) cap(.42, -.38);
+    if(c.hair === 'bob') cap(.6, -.7);
+    if(c.hair === 'long'){ cap(.5, -.6); part(capsuleGeo(.2, .1), hm, head, 0, hy+.12, -.14, 1.25, 1, .55); }
+    if(c.hair === 'ponytail'){ part(sph(.08), hm, head, 0, hy+.2, -.3); const pt = part(capsuleGeo(.065, .12), hm, head, 0, hy+.2, -.33); pt.rotation.x = .5; }
+    if(c.hair === 'bun') part(sph(.11), hm, head, 0, hy+.31, -.08);
+    if(c.hair === 'spiky') for(let i = 0; i < 7; i++){ const a = i/7*Math.PI*2; const k = part(new THREE.ConeGeometry(.06, .16, 10), hm, head, sin(a)*.14, hy+.27, cos(a)*.14-.04); k.rotation.set(cos(a)*.6, 0, -sin(a)*.6); }
+  }
+  const tail = joint('tail', hips, 0, .03, -.15);
+  switch(sp.tail){
+    case 'cat': { const curve = new THREE.CatmullRomCurve3([[0,0,0],[0,.03,-.12],[0,.16,-.22],[0,.3,-.18]].map(p => new THREE.Vector3(...p))); part(new THREE.TubeGeometry(curve, 24, .028, 10), fur, tail); part(sph(.03), fur, tail, 0, .3, -.18); break; }
+    case 'fox': { const b = part(sph(.1), fur, tail, 0, .08, -.16, .75, .75, 1.9); b.rotation.x = .7; part(sph(.06), muz, tail, 0, .21, -.32, 1, 1, 1.2); break; }
+    case 'dog': { const t = part(centeredCapsule(.03, .12), fur, tail, 0, .06, -.04); t.rotation.x = -.6; break; }
+    case 'stub': part(sph(.05), c.species === 'panda' ? dark : fur, tail, 0, 0, -.02); break;
+    case 'puff': part(sph(.065), STD('#ffffff'), tail, 0, 0, -.02); break;
+    case 'curl': { const t = part(new THREE.TorusGeometry(.04, .012, 8, 16, Math.PI*1.6), fur, tail, 0, .03, -.03); t.rotation.y = Math.PI/2; break; }
+  }
+  if(c.species === 'panda'){
+    const lm = dark; [J.shL, J.shR, J.elL, J.elR].forEach(j => j.children.forEach(m => { if(m.isMesh && m.material === fur) m.material = lm; }));
+  }
+  o.rig = {mover, root, J, face};
+}
+
+/* ----- poses & actions ----- */
+const ZERO = [0,0,0];
+const REST = {shL:[0,0,.1], shR:[0,0,-.1], elL:[-.12,0,0], elR:[-.12,0,0]};
+const FACE0 = {blink:0, open:0, smile:.25, brow:0, up:0};
+const EXPR = {neutral:{}, happy:{smile:1, up:.2}, sad:{smile:-.8, brow:.9}, angry:{smile:-.45, brow:-1}, surprised:{open:.75, up:1, smile:0}};
+function mergePose(...ps){ const out = {face:{}}; for(const p of ps){ if(!p) continue; for(const k in p){ if(k === 'face') Object.assign(out.face, p.face); else out[k] = p[k]; } } return out; }
+function blendPose(A, B, w){
+  const out = {face:{}};
+  const keys = new Set([...Object.keys(A), ...Object.keys(B)]); keys.delete('face');
+  for(const k of keys){
+    const a = A[k], b = B[k];
+    if(typeof a === 'number' || typeof b === 'number') out[k] = lerp(a || 0, b || 0, w);
+    else { const x = a || ZERO, y = b || ZERO; out[k] = [lerp(x[0], y[0], w), lerp(x[1], y[1], w), lerp(x[2], y[2], w)]; }
+  }
+  const fa = Object.assign({}, FACE0, A.face), fb = Object.assign({}, FACE0, B.face);
+  for(const k in FACE0) out.face[k] = lerp(fa[k], fb[k], w);
+  return out;
+}
+function gait(ph, run){
+  const s = sin(ph), c = cos(ph), th = (run ? .8 : .5)*s, kb = run ? 1.25 : .85;
+  const kl = Math.max(0, c)*kb + (run ? .25 : .05), kr = Math.max(0, -c)*kb + (run ? .25 : .05);
+  return {
+    thL:[-th,0,0], thR:[th,0,0], knL:[kl,0,0], knR:[kr,0,0], anL:[-(-th+kl)*.6,0,0], anR:[-(th+kr)*.6,0,0],
+    shL:[th*.9,0,.1], shR:[-th*.9,0,-.1], elL:[run ? -1.3 : -.25,0,0], elR:[run ? -1.3 : -.25,0,0],
+    spine:[run ? .22 : .04,0,0], hips:[0,.12*s,0], chest:[0,-.18*s,0], head:[run ? -.12 : 0,.1*s,0],
+    rootY:(run ? .05 : .02)*abs(c) - (run ? .04 : .01), tail:[0,.4*s,0]
+  };
+}
+const ramp = u => smooth(u*5)*smooth((1-u)*5);
+const ACTIONS = {
+  idle:{label:'Idle', dur:48, cat:'still', fn:t => ({chest:[.025*sin(t*2.1),0,0], head:[.03*sin(t*1.3),.12*sin(t*.6),0], shL:[0,0,.1+.02*sin(t*2.1)], shR:[0,0,-.1-.02*sin(t*2.1)], tail:[0,.35*sin(t*2.4),0]})},
+  walk:{label:'Walk to', dur:60, cat:'move', loco:'walk', fn:(t,u,x) => gait(x.ph, false)},
+  run:{label:'Run to', dur:36, cat:'move', loco:'run', fn:(t,u,x) => gait(x.ph, true)},
+  wave:{label:'Wave', dur:48, cat:'gesture', expr:'happy', fn:(t,u) => { const k = ramp(u); return {shR:[0,0,lerp(-.1,-2.55,k)], elR:[lerp(-.12,-.15,k),0,k*(.3+.45*sin(t*11))], shL:[0,0,.12], head:[-.05*k,0,-.08*k], chest:[0,0,.05*k]}; }},
+  talk:{label:'Talk', dur:60, cat:'talk', talk:true, fn:t => ({head:[.06*sin(t*3.1),.12*sin(t*1.7),.05*sin(t*2.3)], shR:[-.35-.25*sin(t*2.6),0,-.25], elR:[-.9-.3*sin(t*3.3),0,0], shL:[-.15*sin(t*1.9),0,.15], elL:[-.4,0,0], chest:[.03*sin(t*2),.06*sin(t*1.3),0]})},
+  jump:{label:'Jump', dur:30, cat:'gesture', expr:'happy', fn:(t,u) => {
+    let k = 0, air = 0;
+    if(u < .25) k = smooth(u/.25); else if(u < .7){ k = 1 - smooth((u-.25)/.1); air = sin((u-.25)/.45*Math.PI); } else k = sin((u-.7)/.3*Math.PI)*.8;
+    return {thL:[-.7*k-.4*air,0,0], thR:[-.7*k-.4*air,0,0], knL:[1.3*k+.6*air,0,0], knR:[1.3*k+.6*air,0,0], anL:[-.6*k,0,0], anR:[-.6*k,0,0],
+      spine:[.25*k,0,0], shL:[.3*k,0,.1+2.2*air], shR:[.3*k,0,-.1-2.2*air], rootY:-.11*k+.55*air, face:{open:.4*air}}; }},
+  dance:{label:'Dance', dur:96, cat:'gesture', expr:'happy', fn:t => { const b = t*Math.PI*2*1.1, s = sin(b);
+    return {hips:[0,.35*s,.12*s], chest:[0,-.2*s,-.1*s], head:[0,.2*s,.15*sin(b+1)], shL:[0,0,1.6+.8*s], shR:[0,0,-1.6+.8*s], elL:[-.5,0,.6*s], elR:[-.5,0,.6*s],
+      thL:[-.25*Math.max(0,s),0,.08], thR:[-.25*Math.max(0,-s),0,-.08], knL:[.5*Math.max(0,s),0,0], knR:[.5*Math.max(0,-s),0,0], rootY:-.03+.04*abs(sin(b*2)), tail:[0,.6*s,0]}; }},
+  cheer:{label:'Cheer', dur:48, cat:'gesture', expr:'happy', fn:t => { const h = abs(sin(t*8));
+    return {shL:[0,0,2.6+.2*sin(t*16)], shR:[0,0,-2.6-.2*sin(t*16)], elL:[-.3,0,0], elR:[-.3,0,0], rootY:.12*h, thL:[-.2*h,0,0], thR:[-.2*h,0,0], knL:[.4*h,0,0], knR:[.4*h,0,0], head:[-.15,0,0], face:{open:.55}}; }},
+  point:{label:'Point', dur:42, cat:'gesture', fn:(t,u) => { const k = ramp(u); return {shR:[-1.45*k,0,-.1-.15*k], elR:[-.12*(1-k),0,0], head:[0,-.25*k,0], chest:[0,-.2*k,0], face:{open:.2*k}}; }},
+  think:{label:'Think', dur:60, cat:'gesture', fn:(t,u) => { const k = ramp(u); return {shR:[-.55*k,0,-.1+.35*k], elR:[-2.2*k,0,-.3*k], head:[-.12*k,.1*k,.12*k], shL:[-.1*k,0,.1], elL:[-.9*k,0,0], face:{brow:.3*k, smile:0}}; }},
+  look:{label:'Look around', dur:60, cat:'still', fn:(t,u) => ({head:[-.05,.8*sin(u*Math.PI*2),0], chest:[0,.25*sin(u*Math.PI*2),0]})},
+  sit:{label:'Sit down', dur:72, cat:'still', fn:t => { const k = smooth(t/.6);
+    return {rootY:-.33*k, thL:[-1.5*k,0,.08*k], thR:[-1.5*k,0,-.08*k], knL:[.3*k,0,0], knR:[.3*k,0,0], anL:[-.4*k,0,0], anR:[-.4*k,0,0], spine:[-.12*k,0,0], shL:[.35*k,0,.1+.2*k], shR:[.35*k,0,-.1-.2*k], head:[.05*k,.12*sin(t*.7),0]}; }},
+  sad:{label:'Sad', dur:60, cat:'emotion', expr:'sad', fn:t => ({head:[.45,0,.05*sin(t)], chest:[.18,0,0], spine:[.05,0,0], shL:[.05,0,.03], shR:[.05,0,-.03], elL:[-.05,0,0], elR:[-.05,0,0], rootY:-.01, tail:[.5,0,0]})},
+  surprised:{label:'Surprised', dur:36, cat:'emotion', expr:'surprised', fn:(t,u) => { const k = smooth(u*6);
+    return {shL:[-.3*k,0,.1+.9*k], shR:[-.3*k,0,-.1-.9*k], elL:[-1.1*k,0,0], elR:[-1.1*k,0,0], spine:[-.12*k,0,0], head:[-.1*k,0,0], rootZ:-.08*k, rootY:.03*sin(u*Math.PI)}; }},
+  angry:{label:'Angry', dur:48, cat:'emotion', expr:'angry', fn:t => { const st = abs(sin(t*6));
+    return {shL:[.1,0,.35], shR:[.1,0,-.35], elL:[-1.4,0,-.4], elR:[-1.4,0,.4], head:[.1,0,.06*sin(t*12)], thR:[-.3*st,0,0], knR:[.5*st,0,0], spine:[.1,0,0]}; }},
+  anim:{label:'Play animation', dur:72, cat:'anim', model:true, fn:() => ({})}
+};
+const CAT_COLOR = {move:'#5b8def', gesture:'#e0a64a', talk:'#c46bd6', emotion:'#e3574d', still:'#7f8a96', anim:'#4fb39a', shot:'#6c7f93'};
+const SPEED = {walk:{v:1.0, stride:.62}, run:{v:2.5, stride:1.15}};
+function talkMouth(t){ const gate = sin(t*1.9) > -.55 ? 1 : .1; return clamp((.15 + .85*abs(sin(t*12.5))*(.55 + .45*sin(t*3.7 + 1.3)))*gate); }
+
+/* ----- story state ----- */
+const storyEl = $('#storyPanel');
+let story = {clips:[], audio:null};
+let selClip = null, pickTarget = null, filmMode = false, focusArea = 'view';
+const actClips = o => story.clips.filter(c => c.kind === 'act' && c.obj === o.id).sort((a,b) => a.start - b.start || a.id - b.id);
+const clipById = id => story.clips.find(c => c.id === id);
+const nextClipId = () => story.clips.reduce((m, c) => Math.max(m, c.id), 0) + 1;
+
+function rootMotion(o, f){
+  o.mesh.updateWorldMatrix(true, false);
+  let x = 0, z = 0, yaw = 0;
+  const fw = new THREE.Vector3(0, 0, 1).transformDirection(o.mesh.matrixWorld), baseYaw = Math.atan2(fw.x, fw.z);
+  for(const c of actClips(o)){
+    if(c.start > f) break;
+    const A = ACTIONS[c.action] || ACTIONS.idle;
+    const local = c.start + c.dur;
+    if(A.loco && c.p.to){
+      const tl = o.mesh.worldToLocal(new THREE.Vector3(c.p.to[0], 0, c.p.to[1]));
+      const dx = tl.x - x, dz = tl.z - z, dist = Math.hypot(dx, dz);
+      const S = SPEED[A.loco], size = (o.char && o.char.size) || 1;
+      c._cad = dist > .05 ? (dist/(c.dur/fps))/(S.stride*size) : 1.6;
+      if(dist > .05){
+        const want = Math.atan2(dx, dz);
+        yaw = lerpAngle(yaw, want, smooth((f - c.start)/6));
+        const u = clamp((f - c.start)/c.dur), ac = .1, v = 1/(1 - ac);
+        const k = clamp(u < ac ? v*u*u/(2*ac) : u > 1 - ac ? 1 - v*(1-u)*(1-u)/(2*ac) : v*(u - ac/2));
+        if(f >= local){ x = tl.x; z = tl.z; } else { x += dx*k; z += dz*k; }
+      }
+    } else if(A.loco){ c._cad = 1.6; }
+    if(c.p.turn != null && c.p.turn !== '' && !A.loco) yaw = lerpAngle(yaw, (+c.p.turn)*DEG - baseYaw, smooth((f - c.start)/8));
+  }
+  return {x, z, yaw};
+}
+function clipPose(c, f){
+  const A = ACTIONS[c.action] || ACTIONS.idle;
+  const t = Math.max(0, f - c.start)/fps, u = clamp((f - c.start)/c.dur);
+  const P = mergePose(REST, A.fn(t, u, {dur:c.dur/fps, ph:2*Math.PI*(c._cad || 1.6)*t}));
+  P.face = Object.assign({}, EXPR[c.p.expr || A.expr || 'neutral'] || {}, P.face);
+  if(c.p.talk ?? A.talk) P.face.open = Math.max(P.face.open || 0, talkMouth(t));
+  return P;
+}
+const IDLE_CLIP = {action:'idle', start:0, dur:1e9, p:{}};
+function blinkAt(o, f){ const ph = (f + o.id*37) % 86; return ph < 4 ? sin(ph/4*Math.PI) : 0; }
+function storyState(o, f){
+  const clips = actClips(o), B = 6;
+  let active = null, last = null;
+  for(const c of clips){
+    if(c.start <= f && f < c.start + c.dur) active = c;
+    else if(c.start + c.dur <= f && (!last || c.start + c.dur >= last.start + last.dur)) last = c;
+  }
+  let P, say = null;
+  if(active){
+    P = clipPose(active, f);
+    const w = (f - active.start)/B;
+    if(w < 1){
+      const before = clips.filter(c => c !== active && c.start < active.start && c.start + c.dur >= active.start - B).pop();
+      const Q = before ? clipPose(before, Math.min(f, before.start + before.dur - .001)) : clipPose(IDLE_CLIP, f);
+      P = blendPose(Q, P, smooth(w));
+    }
+    say = active.p.say || null;
+  } else {
+    P = clipPose(IDLE_CLIP, f);
+    if(last && f - (last.start + last.dur) < B) P = blendPose(clipPose(last, last.start + last.dur - .001), P, smooth((f - (last.start + last.dur))/B));
+  }
+  return {P, say, active};
+}
+function applyPose(o, P){
+  const r = o.rig; if(!r) return;
+  for(const n in r.J){ const v = P[n] || ZERO; r.J[n].rotation.set(v[0], v[1], v[2]); }
+  const size = (o.char && o.char.size) || 1;
+  r.root.position.set(0, (P.rootY || 0)*size, (P.rootZ || 0)*size);
+  const F = Object.assign({}, FACE0, P.face), fc = r.face;
+  fc.eyeL.scale.y = fc.eyeR.scale.y = 1 - .92*clamp(F.blink);
+  fc.smile.scale.set(1, abs(F.smile) < .15 ? .15 : F.smile, 1);
+  fc.open.scale.set(1 + F.up*.1, .1 + .9*clamp(F.open), .45); fc.open.visible = F.open > .04;
+  fc.browL.rotation.z = -F.brow*.4; fc.browR.rotation.z = F.brow*.4;
+  fc.browL.position.y = fc.browR.position.y = fc.browY + F.up*.035;
+}
+function evalCharacter(o, f){
+  if(!o.rig) return;
+  const m = rootMotion(o, f);
+  o.rig.mover.position.set(m.x, 0, m.z); o.rig.mover.rotation.y = m.yaw;
+  const s = storyState(o, f);
+  s.P.face.blink = Math.max(s.P.face.blink || 0, blinkAt(o, f));
+  applyPose(o, s.P);
+  o._say = s.say;
+}
+
+/* ----- imported models (GLB) ----- */
+THREE.Cache.enabled = true;
+const assetUrls = {};
+const assetURL = name => assetUrls[name] || (server ? 'media/assets/' + encodeURIComponent(name) : null);
+const gltfLoader = new THREE.GLTFLoader();
+function buildModel(o){
+  const mover = new THREE.Group(); o.mesh.add(mover); o.rig = {mover};
+  const ph = new THREE.Mesh(new THREE.BoxGeometry(.6, 1.6, .4).translate(0, .8, 0), new THREE.MeshBasicMaterial({color:0xf0b44c, wireframe:true}));
+  ph.userData.viewOnly = true; mover.add(ph);
+  const url = assetURL(o.asset);
+  if(!url){ o.loadError = 'The model file is not available here. Re-import it, or open the scene from the studio server.'; return; }
+  gltfLoader.load(url, g => {
+    if(!objects.includes(o)) return;
+    mover.remove(ph); ph.geometry.dispose();
+    const sc = g.scene;
+    sc.traverse(n => { if(n.isMesh){ n.castShadow = n.receiveShadow = true; } });
+    const box = new THREE.Box3().setFromObject(sc), h = box.max.y - box.min.y;
+    const fit = h > 4 || h < .3 ? 1.6/h : 1;
+    const holder = new THREE.Group(); holder.scale.setScalar(fit); holder.add(sc); mover.add(holder);
+    o.mixer = new THREE.AnimationMixer(sc); o.clips = g.animations || [];
+    o.loadError = null;
+    applyFrame(); if(o === primary()){ setSelection(sel.slice(), true); refreshAttrs(); }
+  }, undefined, () => { o.loadError = 'The model file could not be loaded.'; refreshAttrs(); });
+}
+function evalModel(o, f){
+  if(!o.rig) return;
+  const m = rootMotion(o, f);
+  o.rig.mover.position.set(m.x, 0, m.z); o.rig.mover.rotation.y = m.yaw;
+  if(!o.mixer || !o.clips.length) return;
+  let active = null; for(const c of actClips(o)) if(c.start <= f && f < c.start + c.dur) active = c;
+  o.mixer.stopAllAction();
+  const clip = active ? (o.clips.find(k => k.name === active.p.clip) || o.clips[0]) : null;
+  if(clip){
+    const a = o.mixer.clipAction(clip); a.play();
+    let t = (f - active.start)/fps; t = active.p.loop === false ? Math.min(t, clip.duration) : t % clip.duration;
+    a.time = t;
+  }
+  o.mixer.update(0);
+  o._say = active ? active.p.say || null : null;
+}
+
+/* ----- cameras ----- */
+function buildCamera(o){
+  const bm = STD('#2c3036', .5), lm = STD('#15171a', .3);
+  const add = (geo, mat, x, y, z, rx=0, rz=0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, 0, rz); m.userData.viewOnly = true; o.mesh.add(m); return m; };
+  add(new THREE.BoxGeometry(.22, .26, .36), bm, 0, 0, -.06);
+  add(new THREE.CylinderGeometry(.075, .095, .16, 20), lm, 0, 0, .19, Math.PI/2);
+  add(new THREE.CylinderGeometry(.09, .09, .05, 20), bm, 0, .21, -.12, 0, Math.PI/2);
+  add(new THREE.CylinderGeometry(.09, .09, .05, 20), bm, 0, .21, .06, 0, Math.PI/2);
+  const fr = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints([[0,0,.27],[.28,.16,.75],[0,0,.27],[-.28,.16,.75],[0,0,.27],[.28,-.16,.75],[0,0,.27],[-.28,-.16,.75],[.28,.16,.75],[-.28,.16,.75],[-.28,.16,.75],[-.28,-.16,.75],[-.28,-.16,.75],[.28,-.16,.75],[.28,-.16,.75],[.28,.16,.75]].map(p => new THREE.Vector3(...p))),
+    new THREE.LineBasicMaterial({color:0xe9edf1, transparent:true, opacity:.6}));
+  fr.userData.helper = true; fr.raycast = () => {}; o.mesh.add(fr);
+  const cam = new THREE.PerspectiveCamera(o.cam.fov || 40, 16/9, .05, 600); cam.rotation.y = Math.PI; o.mesh.add(cam);
+  o.camera = cam;
+}
+function evalCamera(o){
+  if(!o.camera) return;
+  o.camera.fov = o.cam.fov || 40;
+  const t = o.cam.aim != null ? byId(o.cam.aim) : null;
+  if(t){
+    const p = new THREE.Vector3();
+    if(t.rig && t.rig.root){ t.rig.root.updateWorldMatrix(true, false); t.rig.root.getWorldPosition(p); p.y += 1.0*((t.char && t.char.size) || 1)*t.mesh.scale.y; }
+    else t.mesh.getWorldPosition(p);
+    o.mesh.updateWorldMatrix(true, false);
+    o.mesh.lookAt(p);
+  }
+}
+function shotAt(f){ let s = null; for(const c of story.clips) if(c.kind === 'shot' && c.start <= f && f < c.start + c.dur && (!s || c.start >= s.start)) s = c; return s; }
+function filmCamera(f){
+  const s = shotAt(f); let o = s ? byId(s.obj) : null;
+  if(!o || o.type !== 'camera') o = (primary() && primary().type === 'camera') ? primary() : objects.find(x => x.type === 'camera');
+  return o || null;
+}
+
+/* ----- props (set dressing) ----- */
+const PROPS = {
+  tree:{label:'Tree', build:g => { prop(g, new THREE.CylinderGeometry(.11, .16, 1.3, 12), '#7a5232', 0, .65, 0);
+    [[0,1.65,0,.72],[.42,1.35,.2,.5],[-.38,1.42,-.15,.52],[.1,1.3,-.4,.45]].forEach(([x,y,z,r]) => prop(g, new THREE.IcosahedronGeometry(r, 1), '#5f9e4a', x, y, z, .9)); }},
+  pine:{label:'Pine', build:g => { prop(g, new THREE.CylinderGeometry(.09, .13, .7, 10), '#6d4a2d', 0, .35, 0);
+    [[.75,1.0,.95],[.6,.9,1.55],[.42,.75,2.05]].forEach(([r,h,y]) => prop(g, new THREE.ConeGeometry(r, h, 14), '#3f7d4e', 0, y, 0)); }},
+  bush:{label:'Bush', build:g => { [[0,.3,0,.38],[.32,.24,.1,.28],[-.3,.22,-.05,.3]].forEach(([x,y,z,r]) => prop(g, new THREE.IcosahedronGeometry(r, 1), '#4f8f3e', x, y, z, .9)); }},
+  rock:{label:'Rock', build:g => { prop(g, new THREE.DodecahedronGeometry(.35, 0), '#8f9296', 0, .2, 0, .95, 1.3, .7, 1); prop(g, new THREE.DodecahedronGeometry(.18, 0), '#7f8287', .38, .1, .15); }},
+  house:{label:'House', build:g => {
+    prop(g, new THREE.BoxGeometry(2.4, 1.7, 2), '#efdcb6', 0, .85, 0);
+    const roof = prop(g, new THREE.ConeGeometry(1.95, 1.0, 4), '#b5543d', 0, 2.2, 0, 1, 1, .85); roof.rotation.y = Math.PI/4;
+    prop(g, new THREE.BoxGeometry(.5, .9, .06), '#7a4f32', 0, .45, 1.01);
+    [[-.75,1.05],[.75,1.05]].forEach(([x,y]) => { prop(g, new THREE.BoxGeometry(.46, .42, .06), '#a8d4ea', x, y, 1.01); prop(g, new THREE.BoxGeometry(.56, .06, .1), '#ffffff', x, y-.24, 1.03); });
+    prop(g, new THREE.BoxGeometry(.28, .7, .28), '#9b4a36', .6, 2.5, -.3); }},
+  bench:{label:'Bench', build:g => {
+    prop(g, new THREE.BoxGeometry(1.4, .07, .42), '#a8744a', 0, .44, 0); prop(g, new THREE.BoxGeometry(1.4, .3, .05), '#a8744a', 0, .68, -.2);
+    [[-.6,.15],[.6,.15],[-.6,-.15],[.6,-.15]].forEach(([x,z]) => prop(g, new THREE.BoxGeometry(.06, .44, .06), '#3a3d42', x, .22, z)); }},
+  lamp:{label:'Lamp post', build:g => { prop(g, new THREE.CylinderGeometry(.05, .08, 2.4, 12), '#2f3338', 0, 1.2, 0); const b = prop(g, new THREE.SphereGeometry(.17, 20, 14), '#fff1c4', 0, 2.5, 0); b.material.emissive = new THREE.Color('#ffe2a0'); b.material.emissiveIntensity = .7; }},
+  fence:{label:'Fence', build:g => { for(let i = 0; i < 5; i++) prop(g, new THREE.BoxGeometry(.09, .7, .06), '#f2efe6', -1 + i*.5, .35, 0); [.2,.5].forEach(y => prop(g, new THREE.BoxGeometry(2.2, .07, .04), '#f2efe6', 0, y, .04)); }},
+  flowers:{label:'Flowers', build:g => { const cols = ['#f25f7a','#ffd34e','#ffffff','#b07cf0','#ff8c42'];
+    for(let i = 0; i < 9; i++){ const a = i*2.4, r = .12 + (i%3)*.13, x = cos(a)*r, z = sin(a)*r, h = .18 + (i%4)*.05;
+      prop(g, new THREE.CylinderGeometry(.01, .012, h, 5), '#4e8f3a', x, h/2, z); prop(g, new THREE.SphereGeometry(.045, 10, 8), cols[i%5], x, h, z); } }},
+  ball:{label:'Ball', build:g => { prop(g, new THREE.SphereGeometry(.18, 28, 20), '#e94b3c', 0, .18, 0, 1, 1, 1, .35); }}
+};
+function prop(g, geo, hex, x=0, y=0, z=0, sx=1, sy=1, sz=1, rough=.75){
+  const m = new THREE.Mesh(geo, STD(hex, rough)); m.position.set(x, y, z); m.scale.set(sx, sy, sz);
+  m.castShadow = m.receiveShadow = true; g.add(m); return m;
+}
+
+/* ----- helper visibility for clean renders ----- */
+function hideHelpers(){
+  const restore = [];
+  scene.traverse(n => {
+    if(n.userData.helper || n.userData.viewOnly){ if(n.visible){ n.visible = false; restore.push(() => n.visible = true); } }
+    else if(n.userData.lightProxy && n.material.visible){ n.material.visible = false; restore.push(() => n.material.visible = true); }
+  });
+  const g = grid.visible, t = tc.visible; tc.visible = false;
+  return () => { restore.forEach(f => f()); grid.visible = g; tc.visible = t; };
+}
+
+/* ----- frame evaluation ----- */
+function evalStory(f){
+  for(const o of objects){ if(o.type === 'character') evalCharacter(o, f); else if(o.type === 'model') evalModel(o, f); }
+  for(const o of objects) if(o.type === 'camera') evalCamera(o);
+}
+function evalAll(f){ objects.forEach(o => evalObj(o, f)); evalStory(f); }
+function subtitlesAt(){ return objects.filter(o => o._say && isShown(o)).map(o => ({name:o.name, say:o._say})); }
+
+/* ----- adding acting clips ----- */
+const actors = () => sel.filter(o => o.type === 'character' || o.type === 'model');
+function addAction(action){
+  const A = ACTIONS[action]; const list = actors();
+  if(!list.length) return toast('Select a character first, then pick an action');
+  if(A.model && !list.some(o => o.type === 'model')) return toast('Play animation is for imported models');
+  const made = [];
+  for(const o of list){
+    if(A.model && o.type !== 'model') continue;
+    const c = {id:nextClipId(), kind:'act', obj:o.id, action, start:frame, dur:A.dur, p:{}};
+    if(A.model || (o.type === 'model' && A.loco)) c.p.clip = o.clips && o.clips[0] ? o.clips[0].name : '';
+    story.clips.push(c); made.push(c);
+  }
+  selClip = made[made.length-1].id;
+  made.forEach(fitRange);
+  toggleBottom('story', true);
+  if(A.loco){
+    pickTarget = {clips:made.map(c => c.id)};
+    toast(`Click the ground where ${list.length === 1 ? list[0].name : 'they'} should ${action === 'run' ? 'run' : 'walk'} to. Esc skips.`);
+    viewEl.classList.add('picking');
+  } else {
+    goFrame(Math.min(end, frame + A.dur));
+    if(A.talk) setTimeout(() => { const i = $('#ceSay'); if(i){ i.focus(); } }, 50);
+  }
+  commit(); refreshClipEditor(); drawStory();
+}
+function finishPick(point){
+  const ids = pickTarget ? pickTarget.clips : []; pickTarget = null; viewEl.classList.remove('picking');
+  let last = null;
+  for(const id of ids){
+    const c = clipById(id); if(!c) continue;
+    const o = byId(c.obj); if(!o) continue;
+    if(point){
+      c.p.to = [+point.x.toFixed(3), +point.z.toFixed(3)];
+      const before = rootMotion(o, c.start - .001);
+      o.mesh.updateWorldMatrix(true, false);
+      const local = o.mesh.worldToLocal(point.clone());
+      const dist = Math.hypot(local.x - before.x, local.z - before.z);
+      const S = SPEED[ACTIONS[c.action].loco] || SPEED.walk;
+      c.dur = Math.max(12, Math.round(dist/(S.v*((o.char && o.char.size) || 1))*fps));
+    }
+    last = c; fitRange(c);
+  }
+  if(last) goFrame(Math.min(end, last.start + last.dur));
+  applyFrame(); commit(); refreshClipEditor(); drawStory();
+  toast(point ? 'Destination set' : 'Walking in place. Set a destination later from the Story panel.');
+}
+function fitRange(c){ const e2 = c.start + c.dur; if(e2 > end){ end = e2; syncTime(); drawTimeline(); } }
+function groundPoint(e){
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set((e.clientX - r.left)/r.width*2 - 1, -(e.clientY - r.top)/r.height*2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const p = new THREE.Vector3();
+  return ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,1,0), 0), p) ? p : null;
+}
+function addShot(){
+  const cam = sel.find(o => o.type === 'camera') || objects.find(o => o.type === 'camera');
+  if(!cam) return toast('Create a camera first (Camera tab, Camera from view)');
+  const nextCut = story.clips.filter(c => c.kind === 'shot' && c.start > frame).reduce((m, c) => Math.min(m, c.start), end + 1);
+  const c = {id:nextClipId(), kind:'shot', obj:cam.id, start:frame, dur:Math.max(6, nextCut - frame), p:{}};
+  story.clips.push(c); selClip = c.id; toggleBottom('story', true); commit(); refreshClipEditor(); drawStory();
+  toast(`Shot on ${cam.name} from frame ${frame}`);
+}
+function cameraFromView(){
+  const o = makeObject({id:nextId++, name:uniqueName('camera'), type:'camera', cam:{fov:Math.round(camera.fov), aim:null},
+    p:camera.position.toArray(), r:[0,0,0], s:[1,1,1]});
+  o.mesh.lookAt(orbit.target);
+  setSelection([o]); commit(); refreshOutliner();
+  toast(`${o.name} placed where you are looking. Add a shot to use it in the movie.`);
+}
+
+/* ----- story panel ----- */
+const scv = $('#scv'), sctx = scv.getContext('2d');
+const SN = 112, SR = 22, SH = 30;
+let sScroll = 0, sDrag = null;
+function storyTracks(){
+  const t = objects.filter(o => o.type === 'character' || o.type === 'model').map(o => ({kind:'act', o, label:o.name}));
+  t.push({kind:'shot', label:'Camera shots'});
+  t.push({kind:'audio', label:'Audio'});
+  return t;
+}
+const sx = (f, w) => SN + (f - start)/Math.max(1, end - start)*(w - SN - 12);
+const sf = (x, w) => start + (x - SN)/(w - SN - 12)*(end - start);
+function drawStory(){
+  if(storyEl.hidden) return;
+  const sz = fitCanvas(scv, sctx); if(!sz) return;
+  const [w, h] = sz, tracks = storyTracks();
+  sctx.clearRect(0, 0, w, h);
+  sctx.font = '12px Barlow, system-ui, sans-serif'; sctx.textBaseline = 'middle';
+  const dim = css('--text-dim'), txt = css('--text'), grd = css('--graph-grid');
+  // ruler
+  sctx.fillStyle = css('--chrome-deep'); sctx.fillRect(0, 0, w, SR);
+  const ppf = (w - SN - 12)/Math.max(1, end - start);
+  const lab = [1,2,5,10,20,25,50,100,200,500].find(s => s*ppf >= 46) || 500;
+  sctx.fillStyle = dim; sctx.textAlign = 'center';
+  for(let f = Math.ceil(start/lab)*lab; f <= end; f += lab){ const x = sx(f, w); sctx.fillText(f, x, SR/2); sctx.fillStyle = grd; sctx.fillRect(Math.round(x), SR, 1, h - SR); sctx.fillStyle = dim; }
+  sctx.save(); sctx.beginPath(); sctx.rect(0, SR, w, h - SR); sctx.clip();
+  tracks.forEach((tk, i) => {
+    const y = SR + i*SH - sScroll;
+    if(i % 2){ sctx.fillStyle = grd; sctx.fillRect(0, y, w, SH); }
+    const isSel = tk.o && sel.includes(tk.o);
+    sctx.fillStyle = isSel ? css('--sel') : txt; sctx.textAlign = 'left';
+    sctx.fillText(tk.label.length > 15 ? tk.label.slice(0, 14) + '…' : tk.label, 10, y + SH/2);
+    let clips = [];
+    if(tk.kind === 'act') clips = actClips(tk.o);
+    if(tk.kind === 'shot') clips = story.clips.filter(c => c.kind === 'shot').sort((a,b) => a.start - b.start);
+    for(const c of clips){
+      const A = ACTIONS[c.action];
+      const x0 = sx(c.start, w), x1 = sx(c.start + c.dur, w);
+      const col = c.kind === 'shot' ? CAT_COLOR.shot : CAT_COLOR[(A && A.cat) || 'still'];
+      sctx.fillStyle = col; sctx.globalAlpha = .9;
+      roundRect(sctx, x0 + 1, y + 4, Math.max(4, x1 - x0 - 2), SH - 8, 4); sctx.fill(); sctx.globalAlpha = 1;
+      if(c.id === selClip){ sctx.strokeStyle = css('--sel'); sctx.lineWidth = 2; roundRect(sctx, x0 + 1, y + 4, Math.max(4, x1 - x0 - 2), SH - 8, 4); sctx.stroke(); }
+      let label = c.kind === 'shot' ? ((byId(c.obj) || {}).name || 'missing camera') : (A ? A.label : c.action);
+      if(c.p.say) label += `: "${c.p.say}"`;
+      if(A && A.loco && !c.p.to) label += ' (in place)';
+      sctx.save(); sctx.beginPath(); sctx.rect(x0 + 4, y, Math.max(0, x1 - x0 - 8), SH); sctx.clip();
+      sctx.fillStyle = '#ffffff'; sctx.fillText(label, x0 + 7, y + SH/2); sctx.restore();
+    }
+    if(tk.kind === 'audio'){
+      if(story.audio){
+        const x0 = sx(story.audio.start, w), x1 = sx(story.audio.start + (audioDur || 0)*fps, w);
+        sctx.fillStyle = '#3f8f6e'; sctx.globalAlpha = .85; roundRect(sctx, x0 + 1, y + 4, Math.max(30, x1 - x0 - 2), SH - 8, 4); sctx.fill(); sctx.globalAlpha = 1;
+        if(audioPeaks){ sctx.fillStyle = 'rgba(255,255,255,.75)'; const n = audioPeaks.length, ww = Math.max(30, x1 - x0 - 2);
+          for(let k = 0; k < ww; k += 2){ const pk = audioPeaks[Math.floor(k/ww*n)] || 0; sctx.fillRect(x0 + 1 + k, y + SH/2 - pk*(SH/2 - 6), 1, pk*(SH - 12)); } }
+        sctx.fillStyle = '#fff'; sctx.fillText(story.audio.asset, x0 + 7, y + SH/2);
+      } else { sctx.fillStyle = dim; sctx.fillText('Media tab, Add audio, to put music or voice here', SN + 6, y + SH/2); }
+    }
+  });
+  sctx.restore();
+  sctx.fillStyle = css('--sel'); sctx.fillRect(sx(frame, w) - 1, 0, 2, h);
+  if(tracks.length === 2){ sctx.fillStyle = dim; sctx.textAlign = 'center'; sctx.fillText('Add a character from the Characters tab to start a story.', (w + SN)/2, SR + 14 + 2*SH); }
+}
+function roundRect(c, x, y, w, h, r){ c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function storyHit(e){
+  const r = scv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, w = r.width;
+  if(y < SR) return {ruler:true, x};
+  const i = Math.floor((y - SR + sScroll)/SH), tk = storyTracks()[i];
+  if(!tk) return {x};
+  let clips = tk.kind === 'act' ? actClips(tk.o) : tk.kind === 'shot' ? story.clips.filter(c => c.kind === 'shot') : [];
+  for(let k = clips.length - 1; k >= 0; k--){ const c = clips[k], x0 = sx(c.start, w), x1 = sx(c.start + c.dur, w);
+    if(x >= x0 && x <= x1 + 3) return {clip:c, edge: x > x1 - 7, x, tk}; }
+  return {tk, x};
+}
+scv.addEventListener('pointerdown', e => {
+  focusArea = 'story';
+  const h = storyHit(e), w = scv.getBoundingClientRect().width;
+  scv.setPointerCapture(e.pointerId);
+  if(h.ruler || (!h.clip && e.button === 0 && !h.tk)){ sDrag = {scrub:true}; goFrame(sf(h.x, w)); return; }
+  if(h.clip){
+    selClip = h.clip.id;
+    const o = byId(h.clip.obj); if(o && !sel.includes(o)) setSelection([o]);
+    sDrag = {clip:h.clip, edge:h.edge, x0:e.clientX, s0:h.clip.start, d0:h.clip.dur, moved:false};
+  } else if(h.tk){
+    selClip = null; if(h.tk.o) setSelection([h.tk.o]);
+    sDrag = {scrub:true}; goFrame(sf(h.x, w));
+  }
+  refreshClipEditor(); drawStory();
+});
+scv.addEventListener('pointermove', e => {
+  const w = scv.getBoundingClientRect().width;
+  if(!sDrag){ const h = storyHit(e); scv.style.cursor = h.clip ? (h.edge ? 'ew-resize' : 'grab') : 'default'; return; }
+  if(sDrag.scrub){ goFrame(sf(e.clientX - scv.getBoundingClientRect().left, w)); return; }
+  const df = Math.round((e.clientX - sDrag.x0)/((w - SN - 12)/Math.max(1, end - start)));
+  if(df !== 0) sDrag.moved = true;
+  if(sDrag.edge) sDrag.clip.dur = Math.max(4, sDrag.d0 + df); else sDrag.clip.start = Math.max(start - 500, sDrag.s0 + df);
+  applyFrame(); drawStory(); drawTimeline(); refreshClipEditor();
+});
+const sEnd = () => { if(sDrag && sDrag.moved) commit(); sDrag = null; };
+scv.addEventListener('pointerup', sEnd); scv.addEventListener('pointercancel', sEnd);
+scv.addEventListener('wheel', e => { const n = storyTracks().length; sScroll = clamp(sScroll + e.deltaY*.5, 0, Math.max(0, n*SH - (scv.clientHeight - SR))); drawStory(); e.preventDefault(); }, {passive:false});
+
+function refreshClipEditor(){
+  const c = selClip != null ? clipById(selClip) : null, ed = $('#clipEd');
+  $('#sHint').hidden = !!c; ed.hidden = !c;
+  if(!c) return;
+  const A = ACTIONS[c.action], o = byId(c.obj), act = c.kind === 'act';
+  $('#ceName').textContent = c.kind === 'shot' ? `Shot: ${(o||{}).name || 'camera'}` : `${(o||{}).name || '?'}: ${A ? A.label : c.action}`;
+  const a = document.activeElement;
+  const setv = (id, v) => { const el = $(id); if(el !== a){ if(el.type === 'checkbox') el.checked = !!v; else el.value = v ?? ''; } };
+  setv('#ceStart', c.start); setv('#ceDur', c.dur);
+  $('#ceExprW').hidden = $('#ceTalkW').hidden = $('#ceSayW').hidden = !act || (o && o.type === 'model');
+  $('#ceSayW').hidden = !act;
+  $('#ceTurnW').hidden = !act || !!(A && A.loco);
+  $('#cePick').hidden = !(act && A && A.loco);
+  $('#ceClipW').hidden = $('#ceLoopW').hidden = !(o && o.type === 'model');
+  setv('#ceExpr', c.p.expr || ''); setv('#ceTalk', c.p.talk ?? (A && A.talk)); setv('#ceSay', c.p.say || ''); setv('#ceTurn', c.p.turn ?? '');
+  setv('#ceLoop', c.p.loop !== false);
+  if(o && o.type === 'model'){ const s = $('#ceClip'); s.innerHTML = (o.clips || []).map(k => `<option>${k.name.replace(/</g,'')}</option>`).join('') || '<option value="">No animations in file</option>'; s.value = c.p.clip || ''; }
+}
+function clipField(id, fn){ $(id).addEventListener('change', e => { const c = clipById(selClip); if(!c) return; fn(c, e.target); applyFrame(); commit(); drawStory(); drawTimeline(); refreshClipEditor(); }); }
+clipField('#ceStart', (c, el) => { const v = Math.round(+el.value); if(isFinite(v)) c.start = v; });
+clipField('#ceDur', (c, el) => { const v = Math.round(+el.value); if(isFinite(v) && v >= 2) c.dur = v; });
+clipField('#ceExpr', (c, el) => { if(el.value) c.p.expr = el.value; else delete c.p.expr; });
+clipField('#ceTalk', (c, el) => { c.p.talk = el.checked; });
+clipField('#ceSay', (c, el) => { const v = el.value.trim(); if(v){ c.p.say = v; if(c.p.talk == null) c.p.talk = true; } else delete c.p.say; });
+clipField('#ceTurn', (c, el) => { if(el.value === '') delete c.p.turn; else c.p.turn = +el.value; });
+clipField('#ceClip', (c, el) => { c.p.clip = el.value; });
+clipField('#ceLoop', (c, el) => { c.p.loop = el.checked; });
+$('#cePick').addEventListener('click', () => { const c = clipById(selClip); if(!c) return; pickTarget = {clips:[c.id]}; viewEl.classList.add('picking'); toast('Click the ground to set the destination. Esc cancels.'); });
+$('#ceDel').addEventListener('click', () => deleteClip());
+function deleteClip(){
+  const c = clipById(selClip); if(!c) return;
+  story.clips = story.clips.filter(x => x !== c); selClip = null;
+  applyFrame(); commit(); refreshClipEditor(); drawStory(); drawTimeline(); toast('Clip deleted');
+}
+function toggleBottom(which, force){
+  const panels = {graph:graphEl, story:storyEl};
+  const show = force ?? panels[which].hidden;
+  for(const k in panels) panels[k].hidden = !(show && k === which);
+  $('#graphBtn').classList.toggle('on', !graphEl.hidden); $('#graphBtn2').classList.toggle('on', !graphEl.hidden);
+  document.querySelectorAll('[data-cmd="story"]').forEach(b => b.classList.toggle('on', !storyEl.hidden));
+  gNeedsFit = true;
+  requestAnimationFrame(() => { resize(); drawGraph(); drawStory(); refreshClipEditor(); });
+}
+new ResizeObserver(() => drawStory()).observe(scv);
+
+/* ----- audio ----- */
+let audioEl = null, audioDur = 0, audioPeaks = null;
+function loadAudio(){
+  if(audioEl){ audioEl.pause(); audioEl = null; } audioPeaks = null; audioDur = 0;
+  if(!story.audio) return drawStory();
+  const url = assetURL(story.audio.asset); if(!url) return;
+  audioEl = new Audio(url); audioEl.preload = 'auto'; audioEl.volume = story.audio.vol ?? 1;
+  fetch(url).then(r => r.arrayBuffer()).then(b => new (window.AudioContext || window.webkitAudioContext)().decodeAudioData(b)).then(buf => {
+    audioDur = buf.duration; const d = buf.getChannelData(0), n = 800, step = Math.floor(d.length/n) || 1; audioPeaks = [];
+    for(let i = 0; i < n; i++){ let m = 0; for(let j = i*step; j < (i+1)*step && j < d.length; j += 8) m = Math.max(m, abs(d[j])); audioPeaks.push(m); }
+    drawStory();
+  }).catch(() => {});
+}
+let audioTimer = null;
+function syncAudio(){
+  if(!audioEl || !story.audio) return;
+  clearTimeout(audioTimer);
+  if(!playing){ audioEl.pause(); return; }
+  const t = (frame - story.audio.start)/fps;
+  if(t >= 0){ try{ audioEl.currentTime = t; }catch(e){} audioEl.play().catch(() => {}); }
+  else { audioEl.pause(); audioTimer = setTimeout(() => { if(playing){ audioEl.currentTime = 0; audioEl.play().catch(() => {}); } }, -t*1000); }
+}
+
+/* ----- media import ----- */
+function pickFile(accept, cb){ const i = document.createElement('input'); i.type = 'file'; i.accept = accept; i.onchange = () => i.files[0] && cb(i.files[0]); i.click(); }
+async function storeAsset(file){
+  const name = file.name.replace(/[^\w.-]+/g, '_').slice(-80);
+  if(server){
+    const r = await fetch('api/assets/' + encodeURIComponent(name), {method:'PUT', body:file});
+    if(!r.ok){ const j = await r.json().catch(() => ({})); throw new Error(j.error || 'Upload failed'); }
+  } else assetUrls[name] = URL.createObjectURL(file);
+  return name;
+}
+function importModel(){
+  pickFile('.glb,model/gltf-binary', async file => {
+    try{
+      const name = await storeAsset(file);
+      const o = makeObject({id:nextId++, name:uniqueName(name.replace(/\.glb$/i, '').replace(/[^\w]/g, '_').slice(0, 20) || 'model'), type:'model', asset:name, p:[0,0,0], r:[0,0,0], s:[1,1,1]});
+      setSelection([o]); commit(); refreshOutliner();
+      toast(server ? `Imported ${name} into the studio` : `Imported ${name} (kept until you reload; use the local studio to keep it)`);
+    }catch(e){ toast(e.message); }
+  });
+}
+function importAudio(){
+  pickFile('audio/*,.mp3,.wav,.m4a,.aac,.ogg', async file => {
+    try{ const name = await storeAsset(file); story.audio = {asset:name, start:frame, vol:1}; loadAudio(); commit(); toggleBottom('story', true); toast(`Audio placed at frame ${frame}`); }
+    catch(e){ toast(e.message); }
+  });
+}
+
+/* ----- environment dialog ----- */
+function envDialog(){
+  dialog({title:'Environment', html:`<div class="form">
+    <span>Sky</span><label class="pair"><input type="checkbox" id="eSky" ${env.sky?'checked':''}> Gradient sky</label>
+    <span>Sky top</span><input type="color" id="eTop" value="${env.top}">
+    <span>Horizon</span><input type="color" id="eHor" value="${env.horizon}">
+    <span>Ground</span><label class="pair"><input type="checkbox" id="eGOn" ${env.groundOn?'checked':''}> <input type="color" id="eGround" value="${env.ground}" style="width:120px"></label>
+    <span>Sun height</span><div class="rng"><input type="range" id="eEl" min="5" max="90" value="${env.sunEl}"><output>${env.sunEl}°</output></div>
+    <span>Sun direction</span><div class="rng"><input type="range" id="eAz" min="-180" max="180" value="${env.sunAz}"><output>${env.sunAz}°</output></div>
+    <span>Sun strength</span><div class="rng"><input type="range" id="eSun" min="0" max="2.5" step=".05" value="${env.sun}"><output>${env.sun}</output></div>
+    <span>Fill light</span><div class="rng"><input type="range" id="eAmb" min="0" max="1.5" step=".05" value="${env.amb}"><output>${env.amb}</output></div>
+    <span>Presets</span><div class="pair"><button class="btn" data-env="day">Day</button><button class="btn" data-env="golden">Golden hour</button><button class="btn" data-env="night">Night</button></div>
+  </div>`, buttons:[]});
+  const read = () => { env.sky = $('#eSky').checked; env.top = $('#eTop').value; env.horizon = $('#eHor').value; env.groundOn = $('#eGOn').checked; env.ground = $('#eGround').value;
+    env.sunEl = +$('#eEl').value; env.sunAz = +$('#eAz').value; env.sun = +$('#eSun').value; env.amb = +$('#eAmb').value;
+    document.querySelectorAll('#dlgBody .rng').forEach(r => { const i = r.querySelector('input'); r.querySelector('output').textContent = i.id === 'eEl' || i.id === 'eAz' ? i.value + '°' : i.value; });
+    applyEnv(); };
+  $('#dlgBody').addEventListener('input', read); $('#dlgBody').addEventListener('change', () => { read(); commit(); });
+  $('#dlgBody').querySelectorAll('[data-env]').forEach(b => b.addEventListener('click', () => {
+    const P = {day:{top:'#7fb1e3', horizon:'#e3edf2', sunEl:50, sun:1.15, amb:.32}, golden:{top:'#6f8fc8', horizon:'#f6c98f', sunEl:12, sun:1.25, amb:.35}, night:{top:'#0e1630', horizon:'#33406a', sunEl:35, sun:.25, amb:.18}}[b.dataset.env];
+    Object.assign(env, P); applyEnv(); commit(); envDialog(); }));
+}
+
+/* ----- rendering ----- */
+let rt = null, bigCv = null, compCv = null;
+const rset = {bg:'#3d434a', grid:false};
+const movie = {preset:'16:9', ss:1.5, subs:true};
+const PRESETS = {'16:9':[1920,1080,'Landscape 1920 × 1080'], '9:16':[1080,1920,'Vertical 1080 × 1920 (Reels, TikTok, Shorts)'], '1:1':[1080,1080,'Square 1080 × 1080'], '720p':[1280,720,'Draft 1280 × 720']};
+function renderCam(f){ const c = filmCamera(f); return c ? c.camera : camera; }
+function renderFrame(f, w, h, ss){
+  const W = Math.round(w*ss), H = Math.round(h*ss);
+  if(!rt || rt.width !== W || rt.height !== H){
+    if(rt) rt.dispose();
+    rt = renderer.capabilities.isWebGL2 ? new THREE.WebGLMultisampleRenderTarget(W, H) : new THREE.WebGLRenderTarget(W, H);
+    if(rt.samples !== undefined) rt.samples = 4;
+    rt.texture.encoding = THREE.sRGBEncoding;
+  }
+  const cam = renderCam(f), oldAspect = cam.aspect;
+  cam.aspect = w/h; cam.updateProjectionMatrix();
+  const cc = renderer.getClearColor(new THREE.Color()), ca = renderer.getClearAlpha();
+  renderer.setRenderTarget(rt); renderer.setScissorTest(false);
+  renderer.setClearColor(new THREE.Color(rset.bg), 1); renderer.clear();
+  const restore = hideHelpers(); grid.visible = rset.grid;
+  renderer.render(scene, cam);
+  restore();
+  const buf = new Uint8Array(W*H*4);
+  renderer.readRenderTargetPixels(rt, 0, 0, W, H, buf);
+  renderer.setRenderTarget(null); renderer.setClearColor(cc, ca);
+  cam.aspect = oldAspect; cam.updateProjectionMatrix();
+  if(!bigCv) bigCv = document.createElement('canvas');
+  bigCv.width = W; bigCv.height = H; bigCv.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(buf.buffer), W, H), 0, 0);
+  if(!compCv) compCv = document.createElement('canvas');
+  if(compCv.width !== w || compCv.height !== h){ compCv.width = w; compCv.height = h; }
+  const cx = compCv.getContext('2d');
+  cx.save(); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+  cx.translate(0, h); cx.scale(1, -1); cx.drawImage(bigCv, 0, 0, w, h); cx.restore();
+  if(movie.subs) drawSubs(cx, w, h);
+  return compCv;
+}
+function wrapText(ctx, text, maxW){
+  const words = text.split(/\s+/), lines = []; let line = '';
+  for(const wd of words){ const t = line ? line + ' ' + wd : wd; if(ctx.measureText(t).width > maxW && line){ lines.push(line); line = wd; } else line = t; }
+  if(line) lines.push(line); return lines;
+}
+function drawSubs(cx, w, h){
+  const subs = subtitlesAt(); if(!subs.length) return;
+  const fs = Math.round(Math.min(w, h)*.05);
+  cx.font = `600 ${fs}px Barlow, "Segoe UI", sans-serif`; cx.textAlign = 'center'; cx.textBaseline = 'alphabetic';
+  cx.lineJoin = 'round'; cx.lineWidth = Math.max(3, fs*.16); cx.strokeStyle = 'rgba(0,0,0,.85)'; cx.fillStyle = '#ffffff';
+  let y = h - Math.round(h*.06);
+  const all = subs.flatMap(s => wrapText(cx, s.say, w*.86)).reverse();
+  for(const ln of all){ cx.strokeText(ln, w/2, y); cx.fillText(ln, w/2, y); y -= Math.round(fs*1.25); }
+}
+let job = null;
 function renderDialog(){
-  dialog({title:'Render & playblast', html:`
+  const opts = Object.entries(PRESETS).map(([k, v]) => `<option value="${k}" ${k === movie.preset ? 'selected' : ''}>${v[2]}</option>`).join('');
+  const hasCam = objects.some(o => o.type === 'camera'), shots = story.clips.filter(c => c.kind === 'shot').length;
+  const mp4 = server && server.ffmpeg;
+  dialog({title:'Render', html:`
     <div class="form">
-      <span>Size</span><div class="pair"><input type="number" id="rW" min="64" max="3840" value="${rset.w}"> × <input type="number" id="rH" min="64" max="2160" value="${rset.h}"></div>
-      <span>Background</span><input type="color" id="rBg" value="${rset.bg}">
+      <span>Format</span><select id="rPreset">${opts}</select>
+      <span>Quality</span><select id="rSS"><option value="1">Draft (fast)</option><option value="1.5">High</option><option value="2">Best (slow)</option></select>
+      <span>Subtitles</span><label class="pair"><input type="checkbox" id="rSubs" ${movie.subs?'checked':''}> Burn in dialogue lines</label>
+      <span>Background</span><label class="pair"><input type="color" id="rBg" value="${rset.bg}" style="width:120px"> <span class="hint">used when the sky is off</span></label>
       <span>Grid</span><label class="pair"><input type="checkbox" id="rGrid" ${rset.grid?'checked':''}> Show the floor grid</label>
-      <span>Playblast range</span><div class="pair" style="color:var(--text-dim)">Frames ${start} to ${end} at ${fps} fps</div>
+      <span>Camera</span><div class="hint" style="margin:0">${shots ? `${shots} shot${shots>1?'s':''} on the Story panel decide the cuts` : hasCam ? 'No shots yet, so the selected or first camera is used' : 'No camera yet, so the viewport view is used'}</div>
+      <span>Range</span><div class="hint" style="margin:0">Frames ${start} to ${end} at ${fps} fps (${((end-start+1)/fps).toFixed(1)} s)</div>
     </div>
-    <div class="preview" id="rPrev"><div class="ph">Render a still of frame ${frame}, or record the frame range as a video.</div></div>
+    <div class="preview" id="rPrev"><div class="ph">${mp4 ? 'Render movie makes a finished MP4 with sound, frame by frame, on your Mac.' : server ? 'MP4 export needs ffmpeg on the studio Mac (the installer adds it with Homebrew). Playblast records WebM in real time.' : 'MP4 export runs in the local studio build. Here you can render stills and real-time WebM playblasts.'}</div></div>
     <div class="prog" id="rProg" hidden><i></i></div>`,
-    buttons:[
-      {label:'Playblast', id:'rPB', onClick:playblast},
-      {label:'Render frame', primary:true, id:'rGo', onClick:renderStill}
-    ]});
-  const sync = () => { rset.w = Math.max(64, Math.min(3840, Math.round(+$('#rW').value || 1280))); rset.h = Math.max(64, Math.min(2160, Math.round(+$('#rH').value || 720))); rset.bg = $('#rBg').value; rset.grid = $('#rGrid').checked; };
-  ['#rW','#rH','#rBg','#rGrid'].forEach(s => $(s).addEventListener('change', sync));
+    buttons:[{label:'Render frame', onClick:renderStill}, {label:'Playblast (WebM)', onClick:playblast}].concat(mp4 ? [{label:'Render movie (MP4)', primary:true, onClick:renderMovie}] : [])});
+  $('#rSS').value = String(movie.ss);
 }
-function readRenderForm(){ if($('#rW')){ rset.w = Math.max(64, Math.min(3840, Math.round(+$('#rW').value || 1280))); rset.h = Math.max(64, Math.min(2160, Math.round(+$('#rH').value || 720))); rset.bg = $('#rBg').value; rset.grid = $('#rGrid').checked; } }
+function readRenderForm(){
+  if(!$('#rPreset')) return;
+  movie.preset = $('#rPreset').value; movie.ss = +$('#rSS').value; movie.subs = $('#rSubs').checked; rset.bg = $('#rBg').value; rset.grid = $('#rGrid').checked;
+}
 function renderStill(){
   readRenderForm();
-  const cv = renderTo(rset.w, rset.h);
+  const [w, h] = PRESETS[movie.preset];
+  evalAll(frame);
+  const cv = renderFrame(frame, w, h, Math.max(movie.ss, 1.5));
   cv.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
-    $('#rPrev').innerHTML = `<img alt="Render of frame ${frame}" src="${url}">`;
-    setDlgButtons([
-      {label:'Playblast', onClick:playblast},
-      {label:'Render again', onClick:renderStill},
-      {label:'Save PNG', primary:true, onClick:() => saveFile(`${baseName()}-f${frame}-${stamp()}.png`, blob)}
-    ]);
-    dmsg(`${rset.w} × ${rset.h}, frame ${frame}`);
+    $('#rPrev').innerHTML = `<img alt="Render of frame ${frame}" src="${URL.createObjectURL(blob)}">`;
+    setDlgButtons([{label:'Render again', onClick:renderStill}, {label:'Save PNG', primary:true, onClick:() => saveFile(`${baseName()}-f${frame}-${stamp()}.png`, blob)}]);
+    dmsg(`${w} × ${h}, frame ${frame}`);
   }, 'image/png');
 }
 function pickMime(){
-  const c = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4;codecs=avc1','video/mp4'];
+  const c = ['video/mp4;codecs=avc1','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
   return c.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
 }
 function playblast(){
   readRenderForm();
   if(!window.MediaRecorder) return dmsg('This browser cannot record video.');
   if(playing) togglePlay();
+  let [w, h] = PRESETS[movie.preset]; if(movie.preset !== '720p'){ w = Math.round(w*2/3/2)*2; h = Math.round(h*2/3/2)*2; }
+  evalAll(start); renderFrame(start, w, h, 1);
+  const stream = compCv.captureStream(0), track = stream.getVideoTracks()[0];
   const mime = pickMime();
-  const w = rset.w - rset.w % 2, h = rset.h - rset.h % 2;
-  renderTo(w, h);
-  const cv = offRenderer().domElement;
-  const stream = cv.captureStream(fps);
-  const rec = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:8e6} : undefined);
+  const rec = new MediaRecorder(stream, mime ? {mimeType:mime, videoBitsPerSecond:10e6} : undefined);
   const chunks = []; rec.ondataavailable = e => e.data.size && chunks.push(e.data);
   const startFrame = frame; let f = start, cancelled = false;
-  pbRec = {cancel:() => { cancelled = true; }};
+  job = {cancel:() => { cancelled = true; }};
   $('#rProg').hidden = false;
-  setDlgButtons([{label:'Stop', onClick:() => pbRec && pbRec.cancel()}]);
+  setDlgButtons([{label:'Stop', onClick:() => job && job.cancel()}]);
   rec.onstop = () => {
-    pbRec = null; $('#rProg').hidden = true;
-    goFrame(startFrame);
-    if(cancelled && !chunks.length){ dmsg('Playblast stopped.'); setDlgButtons([{label:'Playblast', onClick:playblast},{label:'Render frame', primary:true, onClick:renderStill}]); return; }
-    const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
-    const ext = type.includes('mp4') ? 'mp4' : 'webm';
+    job = null; $('#rProg').hidden = true; goFrame(startFrame);
+    if(!chunks.length){ dmsg('Playblast stopped.'); return; }
+    const type = (rec.mimeType || mime || 'video/webm').split(';')[0], ext = type.includes('mp4') ? 'mp4' : 'webm';
     const blob = new Blob(chunks, {type});
     $('#rPrev').innerHTML = `<video controls loop autoplay muted playsinline src="${URL.createObjectURL(blob)}"></video>`;
-    dmsg(`${end-start+1} frames, ${w} × ${h}, ${(blob.size/1048576).toFixed(1)} MB`);
-    setDlgButtons([
-      {label:'Playblast again', onClick:playblast},
-      {label:`Save ${ext.toUpperCase()}`, primary:true, onClick:() => saveFile(`${baseName()}-playblast-${stamp()}.${ext}`, blob)}
-    ]);
+    dmsg(`${end-start+1} frames, ${w} × ${h}, ${(blob.size/1048576).toFixed(1)} MB, no sound`);
+    setDlgButtons([{label:'Playblast again', onClick:playblast}, {label:`Save ${ext.toUpperCase()}`, primary:true, onClick:() => saveFile(`${baseName()}-playblast-${stamp()}.${ext}`, blob)}]);
   };
   rec.start();
   const tick = () => {
     if(cancelled || f > end || !dlg.open){ rec.stop(); return; }
-    frame = f; objects.forEach(o => evalObj(o, f));
-    renderTo(w, h);
+    frame = f; evalAll(f); renderFrame(f, w, h, 1); if(track.requestFrame) track.requestFrame();
     $('#rProg i').style.width = ((f - start + 1)/(end - start + 1)*100) + '%';
     dmsg(`Recording frame ${f} of ${end}`);
     f++; setTimeout(tick, 1000/fps);
   };
   tick();
+}
+async function renderMovie(){
+  readRenderForm();
+  if(playing) togglePlay();
+  const [w, h] = PRESETS[movie.preset], ss = movie.ss;
+  const id = 'job_' + stamp() + '_' + Math.random().toString(36).slice(2, 6);
+  const startFrame = frame, total = end - start + 1, t0 = performance.now();
+  let cancelled = false; job = {cancel:() => { cancelled = true; }};
+  $('#rProg').hidden = false; setDlgButtons([{label:'Stop', onClick:() => job && job.cancel()}]);
+  try{
+    let pending = null;
+    for(let f = start; f <= end; f++){
+      if(cancelled || !dlg.open) throw new Error('Render stopped.');
+      frame = f; evalAll(f);
+      const cv = renderFrame(f, w, h, ss);
+      const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+      if(pending) await pending;
+      pending = fetch(`api/render/${id}/${f - start}`, {method:'PUT', body:blob}).then(r => { if(!r.ok) throw new Error('The studio server refused a frame'); });
+      const done = f - start + 1, el = (performance.now() - t0)/1000, eta = el/done*(total - done);
+      $('#rProg i').style.width = (done/total*100) + '%';
+      dmsg(`Rendering frame ${done} of ${total}, about ${Math.ceil(eta)} s left`);
+      if(done === 1) $('#rPrev').innerHTML = `<img alt="First frame" src="${URL.createObjectURL(blob)}">`;
+    }
+    if(pending) await pending;
+    dmsg('Encoding MP4 with ffmpeg…');
+    const res = await api(`render/${id}/finish`, {method:'POST', body:JSON.stringify({fps, frames:total, name:`${baseName()}-${movie.preset.replace(':','x')}-${stamp()}`,
+      audio: story.audio ? story.audio.asset : null, audioStart: story.audio ? (story.audio.start - start)/fps : 0, volume: story.audio ? story.audio.vol ?? 1 : 1})});
+    $('#rPrev').innerHTML = `<video controls autoplay playsinline src="${res.url}"></video>`;
+    dmsg(`${res.name}.mp4, ${w} × ${h}, ${(res.size/1048576).toFixed(1)} MB, saved in the studio's renders folder`);
+    setDlgButtons([{label:'Render again', onClick:renderMovie}, {label:'Download MP4', primary:true, onClick:() => { const a = document.createElement('a'); a.href = res.url; a.download = res.name + '.mp4'; document.body.appendChild(a); a.click(); a.remove(); }}]);
+  }catch(e){
+    fetch(`api/render/${id}`, {method:'DELETE'}).catch(() => {});
+    dmsg(e.message); setDlgButtons([{label:'Render movie (MP4)', primary:true, onClick:renderMovie}]);
+  }finally{
+    job = null; $('#rProg').hidden = true; goFrame(startFrame);
+  }
+}
+
+/* ----- film view (look through the shot camera) ----- */
+function setFilm(on){
+  filmMode = on; viewEl.classList.toggle('film', on);
+  orbit.enabled = !on; tc.enabled = !on;
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', on ? b.dataset.cmd === 'film' : b.dataset.arg === 'persp'));
+  if(on && !objects.some(o => o.type === 'camera')) toast('No camera yet. Camera tab, Camera from view, makes one.');
+  if(!on){ $('#subs').textContent = ''; $('#camName').textContent = 'persp'; }
+}
+function renderFilmView(w, h){
+  const co = filmCamera(frame);
+  if(!co) return false;
+  const [rw, rh] = PRESETS[movie.preset], A = rw/rh;
+  let gw = w, gh = w/A; if(gh > h){ gh = h; gw = h*A; }
+  const gx = (w - gw)/2, gy = (h - gh)/2;
+  renderer.setScissorTest(true);
+  renderer.setViewport(0, 0, w, h); renderer.setScissor(0, 0, w, h);
+  renderer.setClearColor(0x111316, 1); renderer.clear();
+  renderer.setViewport(gx, gy, gw, gh); renderer.setScissor(gx, gy, gw, gh);
+  renderer.setClearColor(new THREE.Color(rset.bg), 1); renderer.clear();
+  renderer.setClearColor(0x000000, 0);
+  const cam = co.camera; cam.aspect = A; cam.updateProjectionMatrix();
+  const restore = hideHelpers(); grid.visible = false;
+  renderer.render(scene, cam);
+  restore();
+  renderer.setScissorTest(false);
+  const s = shotAt(frame);
+  $('#camName').textContent = `film: ${co.name}${s ? '' : ' (no shot here)'}`;
+  const sb = $('#subs'), subs = subtitlesAt();
+  sb.style.bottom = (gy + gh*.05) + 'px'; sb.style.width = (gw*.86) + 'px'; sb.style.fontSize = Math.round(Math.min(gw, gh)*.05) + 'px';
+  const txt = subs.map(x => x.say).join('\n'); if(sb.textContent !== txt) sb.textContent = txt;
+  return true;
+}
+
+/* ----- demo movie ----- */
+function seedMovie(){
+  removeObjects(objects.slice()); story = {clips:[], audio:null}; nextId = 1;
+  env = Object.assign({}, ENV0); applyEnv();
+  start = 1; end = 216; frame = 1; fps = 24;
+  const P = (kind, x, z, ry=0, s=1) => makeObject({id:nextId++, name:uniqueName(kind), type:'prop', prop:{kind}, p:[x,0,z], r:[0,ry,0], s:[s,s,s]});
+  P('house', -4.6, -5.2, .35); P('tree', 3.6, -3.6); P('tree', 5.6, -1.2, 0, .85); P('tree', -6.2, -2.2, 0, 1.1); P('tree', -2.6, -2.9, 0, .9);
+  P('pine', 1.2, -6.6); P('pine', -1.4, -7.4, 0, 1.2); P('pine', 6.5, -6, 0, 1.1);
+  P('bush', 2.4, -1.9); P('bush', -4.2, -.6, 0, .9); P('bench', 3.4, .5, -.6); P('rock', 4.6, 2.6, .4, .8);
+  P('flowers', -2.1, 3.1); P('flowers', 1.9, 3.3, 1); P('flowers', -5, 1.5); P('lamp', -2.9, -.9); P('fence', -.2, -3.9); P('ball', 2.1, 2.2);
+  const C = (name, species, x, z, ry, extra) => { const o = makeObject({id:nextId++, name, type:'character', char:Object.assign(defaultChar(species), extra), p:[x,0,z], r:[0,ry,0], s:[1,1,1]}); return o; };
+  const mila = C('Mila', 'human', -3.3, 1.6, Math.PI/2, {fur:'#b97b52', hair:'ponytail', hairColor:'#22150e', top:'#e8553f', bottom:'#3b5aa8', style:'skirt', size:.95});
+  const rusty = C('Rusty', 'fox', .8, 1.35, -Math.PI/2, {top:'#2f8f83', bottom:'#e9d8a6', style:'shorts'});
+  const pip = C('Pip', 'bunny', -1.5, -1.5, .35, {top:'#f2c14e', bottom:'#5a4b8a', style:'pants', size:.85});
+  const cam1 = makeObject({id:nextId++, name:'camWide', type:'camera', cam:{fov:38, aim:null}, p:[.2,2.3,8.6], r:[0,0,0], s:[1,1,1]});
+  cam1.mesh.lookAt(-.6, .85, .6);
+  const cam2 = makeObject({id:nextId++, name:'camClose', type:'camera', cam:{fov:30, aim:null}, p:[.4,1.25,4.7], r:[0,0,0], s:[1,1,1]});
+  cam2.mesh.lookAt(-.1, .95, 1.4);
+  let id = 1;
+  const A = (o, action, s, d, p={}) => story.clips.push({id:id++, kind:'act', obj:o.id, action, start:s, dur:d, p});
+  A(mila, 'look', 1, 24); A(mila, 'walk', 25, 58, {to:[-.75, 1.45]}); A(mila, 'wave', 84, 32, {turn:40});
+  A(mila, 'talk', 116, 46, {say:'Hi Rusty! Want to see my new dance?', expr:'happy', talk:true, turn:40}); A(mila, 'dance', 168, 49, {turn:15});
+  A(rusty, 'look', 30, 40); A(rusty, 'wave', 90, 30, {turn:-40}); A(rusty, 'surprised', 160, 22, {say:'Whoa! Show me!', talk:true, turn:-40}); A(rusty, 'dance', 184, 33, {turn:-15});
+  A(pip, 'sit', -20, 179, {turn:20}); A(pip, 'cheer', 168, 49, {turn:10});
+  story.clips.push({id:id++, kind:'shot', obj:cam1.id, start:1, dur:107, p:{}});
+  story.clips.push({id:id++, kind:'shot', obj:cam2.id, start:108, dur:60, p:{}});
+  story.clips.push({id:id++, kind:'shot', obj:cam1.id, start:168, dur:49, p:{}});
+  studioName = 'first_movie';
 }
 
 /* ---------- studio server ---------- */
@@ -1509,7 +2580,7 @@ function dialog({title, html, buttons}){
   setDlgButtons(buttons);
   if(!dlg.open) dlg.showModal();
 }
-dlg.addEventListener('close', () => { if(pbRec) pbRec.cancel(); });
+dlg.addEventListener('close', () => { if(job) job.cancel(); });
 function exportScene(){
   dialog({title:'Scene as JSON text', html:'<textarea id="dlgText" spellcheck="false" readonly></textarea>', buttons:[{label:'Copy to clipboard', primary:true, onClick: async () => {
     const ta = $('#dlgText');
@@ -1527,7 +2598,7 @@ function importScene(){
 }
 function showShortcuts(){
   const rows = [['Q W E R','Select, move, rotate, scale'],['Shift-click','Add to or remove from the selection'],['F / A','Frame selected / frame all'],
-    ['S','Set key on the selection'],['G','Open or close the Graph Editor'],['Space','Play or pause'],[', and .','Previous / next frame'],
+    ['S','Set key on the selection'],['T','Story panel'],['V','Film view through the shot cameras'],['G','Open or close the Graph Editor'],['Space','Play or pause'],[', and .','Previous / next frame'],
     ['X','Toggle snapping'],['4 / 5','Wireframe / shaded'],['P / Shift P','Parent to last selected / unparent'],['Ctrl G','Group'],
     ['Ctrl D','Duplicate'],['Del','Delete with children'],['Ctrl S','Save to studio (local server)'],['Ctrl Z / Ctrl Shift Z','Undo / redo'],['Esc','Clear selection'],
     ['Mouse','Drag to orbit, right-drag to pan, scroll to zoom'],['Graph Editor','Drag keys, scroll to zoom, right-drag to pan, Shift snaps values']];
@@ -1545,7 +2616,7 @@ function openPanelsIfMobile(){ if(matchMedia('(max-width:760px)').matches) $('#s
 const helpEl = $('#help'), DEFAULT_HELP = 'Drag to orbit, right-drag to pan, scroll to zoom. Click to select, Shift-click to add. Press ? for shortcuts.';
 helpEl.textContent = DEFAULT_HELP;
 document.addEventListener('pointerover', e => { const h = e.target.closest('[data-help]'); helpEl.textContent = h ? h.dataset.help : DEFAULT_HELP; });
-function refreshAll(){ refreshOutliner(); refreshAttrs(); drawTimeline(); }
+function refreshAll(){ refreshOutliner(); refreshAttrs(); drawTimeline(); refreshClipEditor(); }
 
 function run(cmd, arg){
   switch(cmd){
@@ -1574,7 +2645,18 @@ function run(cmd, arg){
     case 'shaded': setWire(false); break;
     case 'wire': setWire(true); break;
     case 'grid': grid.visible = !grid.visible; break;
-    case 'graph': toggleGraph(); break;
+    case 'graph': toggleBottom('graph'); break;
+    case 'story': toggleBottom('story'); break;
+    case 'char': createCharacter(arg); break;
+    case 'act': addAction(arg); break;
+    case 'prop': createProp(arg); break;
+    case 'env': envDialog(); break;
+    case 'camView': cameraFromView(); break;
+    case 'addShot': addShot(); break;
+    case 'film': setFilm(!filmMode); break;
+    case 'importModel': importModel(); break;
+    case 'importAudio': importAudio(); break;
+    case 'demo': loadDemo(); break;
     case 'gfit': gNeedsFit = true; drawGraph(); break;
     case 'interp': setInterp(arg); break;
     case 'render': renderDialog(); break;
@@ -1626,7 +2708,10 @@ window.addEventListener('keydown', e => {
   const map = {q:['tool','select'], w:['tool','move'], e:['tool','rotate'], r:['tool','scale'], f:['frameSel'], a:['frameAll'],
     s:['key'], x:['snap'], g:['graph'], '4':['wire'], '5':['shaded'], delete:['del'], backspace:['del'], ',':['prevFrame'], '.':['nextFrame'], '?':['shortcuts']};
   if(k === ' '){ e.preventDefault(); togglePlay(); return; }
-  if(k === 'escape'){ setSelection([]); return; }
+  if(k === 'escape'){ if(pickTarget){ finishPick(null); return; } setSelection([]); return; }
+  if((k === 'delete' || k === 'backspace') && focusArea === 'story' && selClip != null){ e.preventDefault(); deleteClip(); return; }
+  if(k === 't'){ e.preventDefault(); toggleBottom('story'); return; }
+  if(k === 'v'){ e.preventDefault(); setFilm(!filmMode); return; }
   if(map[k]){ e.preventDefault(); run(...map[k]); }
 });
 window.addEventListener('beforeunload', e => { if(server && studioName && dirty){ e.preventDefault(); e.returnValue = ''; } });
@@ -1650,7 +2735,9 @@ function loop(){
   const dt = Math.min(clock.getDelta(), .1);
   if(playing){
     acc += dt; const spf = 1/fps; let moved = false;
-    while(acc >= spf){ acc -= spf; frame++; if(frame > end) frame = start; moved = true; }
+    let wrapped = false;
+    while(acc >= spf){ acc -= spf; frame++; if(frame > end){ frame = start; wrapped = true; } moved = true; }
+    if(wrapped) syncAudio();
     if(moved){ applyFrame(); syncTime(); drawTimeline(); }
   } else acc = 0;
   if(tween){
@@ -1662,6 +2749,7 @@ function loop(){
   }
   orbit.update();
   const w = viewEl.clientWidth, h = viewEl.clientHeight;
+  if(filmMode){ if(renderFilmView(w, h)) return; if($('#camName').textContent !== 'film: no camera yet') $('#camName').textContent = 'film: no camera yet'; }
   renderer.setScissorTest(false); renderer.setViewport(0,0,w,h); renderer.clear();
   renderer.render(scene, camera);
   axCam.position.copy(camera.position).sub(orbit.target).normalize().multiplyScalar(4);
@@ -1685,14 +2773,46 @@ function seed(){
   makeObject({id:nextId++, name:'pTorus1', type:'torus', color:'#c76a5c', rough:.3, metal:.2, p:[-1.4,.68,2], r:[0,-.4,0], s:[1,1,1]});
   makeObject({id:nextId++, name:'pointLight1', type:'light', color:'#ffd9a0', intensity:.9, p:[2.5,3.2,-1.5], r:[0,0,0], s:[1,1,1]});
 }
-let saved = null;
-try{ saved = localStorage.getItem('miniMaya.scene'); }catch(e){}
+const NAMES = ['Mila','Rusty','Pip','Bao','Kiki','Momo','Tara','Rocky','Luna','Niko','Biscuit','Asha','Juno','Toby','Sunny','Coco','Ravi','Maya'];
+function createCharacter(species){
+  const used = new Set(objects.map(o => o.name)), name = NAMES.find(n => !used.has(n)) || uniqueName(SPECIES[species].label);
+  const n = objects.filter(o => o.type === 'character').length;
+  const o = makeObject({id:nextId++, name, type:'character', char:defaultChar(species), p:[orbit.target.x + ((n % 5) - 2)*.9, 0, orbit.target.z + 1], r:[0,0,0], s:[1,1,1]});
+  setSelection([o]); applyFrame(); commit(); refreshOutliner(); openPanelsIfMobile();
+  toast(`${name} the ${SPECIES[species].label.toLowerCase()} joined. Give them actions on the Acting tab.`);
+  shelfTab = 'Acting'; buildShelf();
+}
+function createProp(kind){
+  const o = makeObject({id:nextId++, name:uniqueName(kind), type:'prop', prop:{kind}, p:[+orbit.target.x.toFixed(2), 0, +orbit.target.z.toFixed(2)], r:[0,0,0], s:[1,1,1]});
+  setSelection([o]); commit(); refreshOutliner(); toast(`Added ${o.name}. Move it with W.`);
+}
+function loadDemo(){
+  const prev = serialize();
+  seedMovie(); applyFrame();
+  history.push(prev); commit();
+  setSelection([], true); refreshAll();
+  camera.position.set(6.5, 4.8, 11); orbit.target.set(0, .8, 0);
+  setFilm(true); toggleBottom('story', true);
+  toast('Demo movie loaded. Press Space to play. Undo brings your previous scene back.');
+}
+initCharUI();
+buildShelf();
+applyEnv();
+let saved = null, firstV3 = false;
+try{ saved = localStorage.getItem('miniMaya.scene'); firstV3 = !localStorage.getItem('miniMaya.v3'); localStorage.setItem('miniMaya.v3', '1'); }catch(e){}
 if(saved){ try{ restore(saved); }catch(e){ saved = null; } }
-if(!saved){ removeObjects(objects.slice()); nextId = 1; seed(); applyFrame(); }
-history = [serialize()]; dirty = false;
+let demoBoot = false;
+if(!saved || firstV3){
+  const prev = saved ? serialize() : null;
+  seedMovie(); applyFrame();
+  history = prev ? [prev, serialize()] : [serialize()];
+  demoBoot = true;
+} else history = [serialize()];
+dirty = false;
 setTool('move'); syncTime(); refreshAll(); resize();
+if(demoBoot){ camera.position.set(6.5, 4.8, 11); orbit.target.set(0, .8, 0); orbit.update(); setFilm(true); toggleBottom('story', true); }
 loop();
-window.__miniMaya = {get objects(){ return objects; }, get sel(){ return sel; }, run, select, setSelection, goFrame, serialize};
+window.__miniMaya = {get objects(){ return objects; }, get sel(){ return sel; }, get story(){ return story; }, run, select, setSelection, goFrame, serialize, finishPick, addAction, evalAll};
 })();
 </script>
 </body>

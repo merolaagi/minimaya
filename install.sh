@@ -20,8 +20,22 @@ PY="$(command -v python3 || true)"
 PY="$("$PY" -c 'import sys; print(sys.executable)')"
 ok "Python: $PY"
 
+FF="$(command -v ffmpeg || true)"
+for c in /opt/homebrew/bin/ffmpeg /usr/local/bin/ffmpeg; do [ -z "$FF" ] && [ -x "$c" ] && FF="$c"; done
+if [ -z "$FF" ] && [ "${MINIMAYA_NO_FFMPEG:-0}" != "1" ]; then
+  BREW="$(command -v brew || true)"
+  for c in /opt/homebrew/bin/brew /usr/local/bin/brew; do [ -z "$BREW" ] && [ -x "$c" ] && BREW="$c"; done
+  if [ -n "$BREW" ]; then
+    say "Installing ffmpeg with Homebrew for MP4 movie export (one time, a few minutes; MINIMAYA_NO_FFMPEG=1 skips)"
+    "$BREW" install ffmpeg >/dev/null && FF="$(dirname "$BREW")/ffmpeg" || say "Homebrew could not install ffmpeg; MP4 export stays off, WebM playblasts still work"
+  else
+    say "No Homebrew found, so no ffmpeg: MP4 movie export stays off (install Homebrew, then brew install ffmpeg)"
+  fi
+fi
+[ -n "$FF" ] && ok "ffmpeg: $FF (MP4 movies with sound)"
+
 say "Installing Mini Maya Studio $VERSION (build $BUILD) into $DEST"
-mkdir -p "$DEST/data/scenes" "$DEST/logs" "$DEST/releases"
+mkdir -p "$DEST/data/scenes" "$DEST/data/assets" "$DEST/data/renders" "$DEST/logs" "$DEST/releases"
 if [ -f "$DEST/VERSION" ] && [ -f "$DEST/index.html" ]; then
   OLD="$(cat "$DEST/VERSION")-$(cat "$DEST/BUILD" 2>/dev/null || echo old)"
   tar -czf "$DEST/releases/backup-$OLD.tgz" -C "$DEST" --exclude ./data --exclude ./logs --exclude ./releases --exclude ./.git . 2>/dev/null || true
@@ -59,6 +73,10 @@ if [ "$(uname)" = "Darwin" ]; then
     <string>--port</string><string>$PORT</string>
   </array>
   <key>WorkingDirectory</key><string>$DEST</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
   <key>StandardOutPath</key><string>$DEST/logs/server.log</string>
@@ -74,7 +92,7 @@ PL
   ok "Background service $LABEL loaded (starts at login, restarts if it stops)"
 else
   say "Not macOS: starting in the background with nohup"
-  pkill -f "$DEST/server.py" 2>/dev/null || true
+  pkill -f "[s]erver.py --host $HOST --port $PORT" 2>/dev/null || true
   nohup "$PY" "$DEST/server.py" --host "$HOST" --port "$PORT" >> "$DEST/logs/server.log" 2>&1 &
 fi
 
@@ -114,6 +132,7 @@ echo
 ok "Mini Maya Studio $VERSION is running at $URL"
 echo "   App folder:  $DEST"
 echo "   Scenes:      $DEST/data/scenes"
+echo "   Movies:      $DEST/data/renders"
 echo "   Logs:        $DEST/logs/server.log"
 echo "   Control:     $DEST/ctl.sh status|restart|stop|start|logs"
 [ "$(uname)" = "Darwin" ] && [ "${MINIMAYA_NO_OPEN:-0}" != "1" ] && open "$URL" || true
